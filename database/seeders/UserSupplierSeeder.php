@@ -21,7 +21,6 @@ class UserSupplierSeeder extends Seeder
 
         $supplierNames = [
             'CVA',
-            'OWN'
         ];
 
         foreach ($supplierNames as $supplierName) {
