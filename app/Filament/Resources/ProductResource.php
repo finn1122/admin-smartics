@@ -99,6 +99,13 @@ class ProductResource extends Resource
                 );
         }
 
+        // Agregar la columna de inventario (suma de cantidades de lotes)
+        $columns[] = Tables\Columns\TextColumn::make('batches')
+            ->label('Inventario')
+            ->getStateUsing(fn ($record) =>
+                $record->batches->sum('quantity') ?? '0' // Suma de la cantidad de los lotes
+            );
+
         return $table
             ->columns($columns)
             ->filters([])

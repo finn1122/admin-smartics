@@ -49,4 +49,10 @@ class Product extends Model
     {
         return $this->hasMany(Gallery::class);
     }
+    // En Product.php
+    public function batches()
+    {
+        return $this->hasMany(Batch::class);
+    }
+
 }
