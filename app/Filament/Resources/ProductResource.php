@@ -68,7 +68,7 @@ class ProductResource extends Resource
 
             Tables\Columns\TextColumn::make('sku')
                 ->label('SKU')
-                ->sortable()
+                ->limit(16)
                 ->searchable(),
 
             Tables\Columns\TextColumn::make('warranty')
@@ -88,7 +88,6 @@ class ProductResource extends Resource
 
         // 🔹 Obtener todos los proveedores y crear columnas dinámicamente
         $suppliers = Supplier::all();
-        Log::debug($suppliers);
         foreach ($suppliers as $supplier) {
             $columns[] = Tables\Columns\TextColumn::make("supplier_{$supplier->id}")
                 ->label($supplier->name)
