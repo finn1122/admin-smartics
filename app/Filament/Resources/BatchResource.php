@@ -26,7 +26,9 @@ class BatchResource extends Resource
                 Forms\Components\Select::make('product_id')
                     ->relationship('product', 'name')
                     ->required()
-                    ->label('Producto'),
+                    ->label('Producto')
+                    ->searchable()
+                    ->preload(),
 
                 Forms\Components\Select::make('supplier_id')
                     ->relationship('supplier', 'name')
