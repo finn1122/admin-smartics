@@ -19,11 +19,20 @@ class UserSupplierSeeder extends Seeder
             'password' => Hash::make('123456'), // Recuerda cambiar la contraseña
         ]);
 
-        // Insertar un proveedor
-        $supplier = Supplier::create([
-            'name' => 'CVA',
-            'address' => '',
-        ]);
+        $supplierNames = [
+            'CVA',
+            'OWN'
+        ];
+
+        foreach ($supplierNames as $supplierName) {
+            Supplier::create([
+                'name' => $supplierName,
+                'address' => '',
+                'active' => true
+            ]);
+        }
+
+
 
         $this->command->info('Usuario y proveedor creados exitosamente.');
     }

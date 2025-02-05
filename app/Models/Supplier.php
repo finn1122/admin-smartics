@@ -13,6 +13,7 @@ class Supplier extends Model
         'name', // Nombre del proveedor
         'contact', // Contacto del proveedor
         'address', // Dirección del proveedor
+        'active'
     ];
 
 

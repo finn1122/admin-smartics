@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
 use App\Http\Controllers\Api\V1\Inventory\InventoryController;
 use App\Http\Controllers\Api\V1\Product\ProductController;
 use App\Http\Controllers\Controller;
@@ -12,18 +13,19 @@ use App\Repositories\CVARepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Utils\CurrencyHelper;
 
 class CVAController extends Controller
 {
     protected CVARepository $cvaRepository;
-    protected InventoryController $inventoryController;
     protected ProductController $productController;
+    protected ExternalProductDataController $externalProductDataController;
 
-    public function __construct(CVARepository $cvaRepository, InventoryController $inventoryController, ProductController $productController)
+    public function __construct(CVARepository $cvaRepository, ProductController $productController, ExternalProductDataController $externalProductDataController)
     {
         $this->cvaRepository = $cvaRepository;
-        $this->inventoryController = $inventoryController;
         $this->productController = $productController;
+        $this->externalProductDataController = $externalProductDataController;
     }
 
     /**
@@ -49,7 +51,6 @@ class CVAController extends Controller
             // Obtener los productos del repositorio
             $products = $this->cvaRepository->getProductsByBrandId($brand->id);
             $supplierCVA = Supplier::where('name', 'CVA')->first();
-            Log::debug($supplierCVA);
 
             if($supplierCVA){
                 foreach ($products['item'] as $productArray) {
@@ -57,9 +58,10 @@ class CVAController extends Controller
 
                     // Actualizar inventario
                     $quantity = $productArray['disponible'];
+                    $price = $productArray['precio'];
+                    $currencyCode = CurrencyHelper::getCurrencyCode($productArray['moneda']); // Retorna "MXN"
 
-                    // Crear una estructura de Request
-                    $inventoryRequest = ['quantity' => $quantity];
+
                     if(!$product) {
 
                         $productRequest = [
@@ -85,10 +87,7 @@ class CVAController extends Controller
                         $productId = $product->id;
                     }
 
-                    Log::debug($productId);
-                    $inventoryRequest = new Request($inventoryRequest);
-
-                    $this->inventoryController->updateInventoryByProductIdAndSupplierId($inventoryRequest, $productId, $supplierCVA->id);
+                    $this->externalProductDataController->updateExternalProductData($productId, $supplierCVA->id, $currencyCode, $price, $quantity);
 
                 }
                 return response()->json(['message' => 'success'], 200);

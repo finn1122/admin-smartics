@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
+use App\Models\Supplier;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -59,7 +60,7 @@ class ProductResource extends Resource
                     ->limit(30)
                     ->sortable( )
                     ->searchable(),
-                
+
 
                 Tables\Columns\TextColumn::make('cva_key')
                     ->label('Código CVA')
@@ -89,6 +90,7 @@ class ProductResource extends Resource
                     ->boolean() // Convierte el valor en un ícono de check (true) o cruz (false)
                     ->trueIcon('heroicon-o-check-circle') // Ícono para "true"
                     ->falseIcon('heroicon-o-x-circle'),
+
             ])
             ->filters([
                 //

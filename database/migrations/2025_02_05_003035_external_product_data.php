@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventories', function (Blueprint $table) {
+        Schema::create('external_product_data', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // Relación con el producto
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity')->default(0); // Cantidad en inventario
-            $table->date('purchase_date')->nullable(); // Fecha de compra
+            $table->decimal('price', 10, 2); // Precio ofrecido por el proveedor
+            $table->decimal('sale_price', 10, 2);
+            $table->string('currency_code');
+            $table->integer('quantity'); // Cantidad disponible en el proveedor
+            $table->timestamp('consulted_at'); // Fecha y hora de la consulta
             $table->timestamps();
         });
     }
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventories');
+        //
     }
 };

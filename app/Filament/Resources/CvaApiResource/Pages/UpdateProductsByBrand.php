@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CvaApiResource\Pages;
 use AllowDynamicProperties;
 use App\Filament\Resources\CvaApiResource;
 use App\Http\Controllers\Api\V1\CVAController;
+use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
 use App\Http\Controllers\Api\V1\Inventory\InventoryController;
 use App\Http\Controllers\Api\V1\Product\ProductController;
 use App\Models\Brand;
@@ -57,9 +58,9 @@ use Illuminate\Support\Facades\Log;
 
             // ✅ Instanciar CVAController aquí para evitar que sea null
             $cvaRepository = app()->make(CVARepository::class);
-            $inventoryController = app()->make(InventoryController::class);
+            $externalProductDataController = app()->make(ExternalProductDataController::class);
             $productController = app()->make(ProductController::class);
-            $this->CVAController = new CVAController($cvaRepository, $inventoryController, $productController);
+            $this->CVAController = new CVAController($cvaRepository, $productController, $externalProductDataController);
 
             // ✅ Verifica que la instancia no sea null
             if (!$this->CVAController) {

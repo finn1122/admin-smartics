@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name'); // Nombre del proveedor
             $table->string('contact')->nullable(); // Contacto del proveedor
             $table->string('address')->nullable(); // Dirección del proveedor
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }

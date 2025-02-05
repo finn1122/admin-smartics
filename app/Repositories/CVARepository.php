@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\Brand;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use SimpleXMLElement;
 
 class CVARepository
 {
