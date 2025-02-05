@@ -55,4 +55,9 @@ class Product extends Model
         return $this->hasMany(Batch::class);
     }
 
+    // Relación con los datos de proveedores externos
+    public function externalProductData()
+    {
+        return $this->hasMany(ExternalProductData::class);
+    }
 }
