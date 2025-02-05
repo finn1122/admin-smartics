@@ -11,11 +11,10 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Log;
 
 class PriceResource extends Resource
@@ -91,19 +90,39 @@ class PriceResource extends Resource
 
                         return $fields;
                     })
-                    ->afterStateUpdated(function ($state, $get, $record) { // Ahora $record está definido aquí
+                    ->afterStateUpdated(function ($state, $get, $record) {
                         // Guardar los precios de venta de los lotes
                         $batches = Batch::where('product_id', $record->id)->get();
 
                         foreach ($batches as $batch) {
                             // Verificar si el precio de venta del lote fue actualizado
                             if (isset($state["batch_{$batch->id}_sale_price"])) {
-                                $batch->sale_price = $state["batch_{$batch->id}_sale_price"];
-                                $batch->save();
-                                Log::debug("Lote #{$batch->id} - Precio de venta actualizado a: {$batch->sale_price}");
+                                $newSalePrice = $state["batch_{$batch->id}_sale_price"];
+                                $purchasePrice = $batch->purchase_price;  // Asumimos que tienes este campo en el modelo Batch
+
+                                // Validar que el precio de venta no sea menor o igual al precio de compra
+                                if ($newSalePrice <= $purchasePrice) {
+                                    // Si el precio de venta es menor o igual al precio de compra, mostrar mensaje de error
+
+                                    // Usar Filament para mostrar un error visualmente en la pantalla
+                                    Notification::make()
+                                        ->title('Error al actualizar el precio de venta')
+                                        ->body("El precio de venta del Lote #{$batch->id} no es válido, ya que es menor o igual que el precio de compra.")
+                                        ->danger() // Método correcto para error
+                                        ->send();
+
+                                    // Retornar el estado para evitar la actualización del lote
+                                    return false;
+                                } else {
+                                    // Si el precio es válido, actualizamos el lote
+                                    $batch->sale_price = $newSalePrice;
+                                    $batch->save();
+                                    Log::debug("Lote #{$batch->id} - Precio de venta actualizado a: {$batch->sale_price}");
+                                }
                             }
                         }
                     }),
+
 
                 Forms\Components\Section::make('Precios por Proveedor')
                     ->schema(function ($record) {
@@ -207,9 +226,7 @@ class PriceResource extends Resource
                                     // Si el precio de venta es menor que el precio de compra
                                     Log::warning("El precio de venta para el proveedor {$supplier->name} no es válido, ya que es menor que el precio de compra.");
                                     // Opcional: Actualizar el precio de venta a un valor mínimo (ej. el precio de compra)
-                                    $newSalePrice = $price;  // Establecer el sale_price al precio de compra
-
-                                    // O puedes dejarlo sin cambios o mostrar un mensaje para el usuario
+                                    return false;
                                 }
                             } else {
                                 // Si no se encuentra alguno de los campos
