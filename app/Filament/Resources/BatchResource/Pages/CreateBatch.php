@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateBatch extends CreateRecord
 {
     protected static string $resource = BatchResource::class;
+
+    public function getTitle(): string
+    {
+        return 'Crear Lote'; // Cambia el título de la página "Create"
+    }
 }

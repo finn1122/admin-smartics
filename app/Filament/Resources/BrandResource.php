@@ -19,6 +19,21 @@ class BrandResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationLabel(): string
+    {
+        return 'Marcas';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Marcas'; // Cambia "Lotes" por el nombre plural que desees
+    }
+
+    public static function getLabel(): ?string
+    {
+        return 'Marca'; // Nombre en singular
+    }
+
     public static function form(Form $form): Form
     {
         return $form

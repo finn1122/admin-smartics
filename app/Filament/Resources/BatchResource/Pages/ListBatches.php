@@ -10,6 +10,11 @@ class ListBatches extends ListRecords
 {
     protected static string $resource = BatchResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Lista de Lotes'; // Cambia el título de la página "List"
+    }
+
     protected function getHeaderActions(): array
     {
         return [

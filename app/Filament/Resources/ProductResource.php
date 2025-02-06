@@ -19,6 +19,22 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Productos';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Productos'; // Cambia "Lotes" por el nombre plural que desees
+    }
+
+    public static function getLabel(): ?string
+    {
+        return 'Producto'; // Nombre en singular
+    }
+
     public static function form(Form $form): Form
     {
         return $form

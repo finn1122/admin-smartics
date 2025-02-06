@@ -19,6 +19,21 @@ class BatchResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationLabel(): string
+    {
+        return 'Lotes';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Lotes'; // Cambia "Lotes" por el nombre plural que desees
+    }
+
+    public static function getLabel(): ?string
+    {
+        return 'Lote'; // Nombre en singular
+    }
+
     public static function form(Form $form): Form
     {
         return $form

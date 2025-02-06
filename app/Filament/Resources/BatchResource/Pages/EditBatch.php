@@ -16,4 +16,8 @@ class EditBatch extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+    public function getTitle(): string
+    {
+        return 'Editar Lote'; // Cambia el título de la página "Edit"
+    }
 }

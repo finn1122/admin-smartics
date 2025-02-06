@@ -19,6 +19,21 @@ class GroupResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationLabel(): string
+    {
+        return 'Grupos';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Grupos'; // Cambia "Lotes" por el nombre plural que desees
+    }
+
+    public static function getLabel(): ?string
+    {
+        return 'Grupo'; // Nombre en singular
+    }
+
     public static function form(Form $form): Form
     {
         return $form
