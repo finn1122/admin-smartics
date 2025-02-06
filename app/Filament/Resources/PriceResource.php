@@ -26,28 +26,77 @@ class PriceResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $columns = [
+            // Columnas estándar
+            Tables\Columns\TextColumn::make('name')
+                ->label('Nombre')
+                ->limit(30)
+                ->sortable()
+                ->searchable()
+                ->tooltip(fn ($record) => $record->name),
+
+            Tables\Columns\TextColumn::make('cva_key')
+                ->label('Código CVA')
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('sku')
+                ->label('SKU')
+                ->limit(16)
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('brand.name')
+                ->label('Marca')
+                ->sortable()
+                ->searchable(),
+        ];
+
+        // 🔹 Obtener todos los proveedores y crear columnas dinámicamente
+        $suppliers = Supplier::all();
+        foreach ($suppliers as $supplier) {
+            $columns[] = Tables\Columns\TextColumn::make("supplier_{$supplier->id}")
+                ->label($supplier->name)
+                ->getStateUsing(fn ($record) =>
+                    ExternalProductData::where('product_id', $record->id)
+                        ->where('supplier_id', $supplier->id)
+                        ->value('quantity') ?? '0' // Mostrar 0 si no hay registro
+                );
+        }
+
+        // Agregar la columna de inventario (suma de cantidades de lotes)
+        $columns[] = Tables\Columns\TextColumn::make('batches')
+            ->label('Inventario')
+            ->getStateUsing(fn ($record) =>
+                $record->batches->sum('quantity') ?? '0' // Suma de la cantidad de los lotes
+            );
+
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Producto')->searchable()->sortable(),
-            ])
-            ->filters([
-                // Filtros opcionales
-            ])
+            ->columns($columns)
+            ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(), // Acción para editar precios
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Acciones masivas opcionales
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Grid::make(4)->schema([
                 // 📌 Nombre del producto (Solo lectura)
                 Forms\Components\TextInput::make('name')
                     ->label('Producto')
                     ->disabled(),
+                Forms\Components\TextInput::make('sku')
+                    ->label('SKU')
+                    ->disabled(),
+                Forms\Components\TextInput::make('cva_key')
+                    ->label('Clave CVA')
+                    ->disabled(),
+                ]),
                 Forms\Components\Section::make('Precios por Lote')
                     ->schema(function ($record) {
                         if (!$record->id) {
@@ -84,7 +133,17 @@ class PriceResource extends Resource
                                     ->label("Venta (Lote #{$batch->id})")
                                     ->numeric()
                                     ->default($batch->sale_price)
-                                    ->formatStateUsing(fn() => $batch->sale_price),
+                                    ->formatStateUsing(fn() => $batch->sale_price)
+                                    ->rules([
+                                        function ($get) use ($batch) {
+                                            return function (string $attribute, $value, $fail) use ($batch) {
+                                                // Validar que el precio de venta no sea menor o igual al precio de compra
+                                                if ($value <= $batch->purchase_price) {
+                                                    $fail("El precio de venta del Lote #{$batch->id} no puede ser menor o igual al precio de compra.");
+                                                }
+                                            };
+                                        },
+                                    ]),
                             ]);
                         }
 
@@ -98,17 +157,15 @@ class PriceResource extends Resource
                             // Verificar si el precio de venta del lote fue actualizado
                             if (isset($state["batch_{$batch->id}_sale_price"])) {
                                 $newSalePrice = $state["batch_{$batch->id}_sale_price"];
-                                $purchasePrice = $batch->purchase_price;  // Asumimos que tienes este campo en el modelo Batch
+                                $purchasePrice = $batch->purchase_price;
 
                                 // Validar que el precio de venta no sea menor o igual al precio de compra
                                 if ($newSalePrice <= $purchasePrice) {
-                                    // Si el precio de venta es menor o igual al precio de compra, mostrar mensaje de error
-
-                                    // Usar Filament para mostrar un error visualmente en la pantalla
+                                    // Mostrar un mensaje de error en el formulario
                                     Notification::make()
                                         ->title('Error al actualizar el precio de venta')
                                         ->body("El precio de venta del Lote #{$batch->id} no es válido, ya que es menor o igual que el precio de compra.")
-                                        ->danger() // Método correcto para error
+                                        ->danger()
                                         ->send();
 
                                     // Retornar el estado para evitar la actualización del lote
@@ -122,8 +179,6 @@ class PriceResource extends Resource
                             }
                         }
                     }),
-
-
                 Forms\Components\Section::make('Precios por Proveedor')
                     ->schema(function ($record) {
                         $suppliers = Supplier::all();
@@ -149,7 +204,7 @@ class PriceResource extends Resource
                             ]);
 
                             // Crear los campos de formulario
-                            $fields[] = Forms\Components\Grid::make(3)->schema([
+                            $fields[] = Forms\Components\Grid::make(4)->schema([
 
                                 // Cantidad disponible
                                 Forms\Components\TextInput::make("quantity")
@@ -177,7 +232,17 @@ class PriceResource extends Resource
                                     ->label("Venta ({$supplier->name})")
                                     ->numeric()
                                     ->default($salePrice)
-                                    ->formatStateUsing(fn() => $salePrice),
+                                    ->formatStateUsing(fn() => $salePrice)
+                                    ->rules([
+                                        function ($get) use ($price) {
+                                            return function (string $attribute, $value, $fail) use ($price) {
+                                                // Validar que el precio de venta no sea menor o igual al precio de compra
+                                                if ($value <= $price) {
+                                                    $fail("El precio de venta no puede ser menor o igual al precio de compra.");
+                                                }
+                                            };
+                                        },
+                                    ]),
                             ]);
                         }
 
@@ -225,7 +290,15 @@ class PriceResource extends Resource
                                 } else {
                                     // Si el precio de venta es menor que el precio de compra
                                     Log::warning("El precio de venta para el proveedor {$supplier->name} no es válido, ya que es menor que el precio de compra.");
-                                    // Opcional: Actualizar el precio de venta a un valor mínimo (ej. el precio de compra)
+
+                                    // Mostrar un mensaje de error en el formulario
+                                    Notification::make()
+                                        ->title('Error al actualizar el precio de venta')
+                                        ->body("El precio de venta para el proveedor {$supplier->name} no es válido, ya que es menor que el precio de compra.")
+                                        ->danger()
+                                        ->send();
+
+                                    // Retornar el estado para evitar la actualización del registro
                                     return false;
                                 }
                             } else {

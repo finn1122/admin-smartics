@@ -40,6 +40,11 @@ class BatchResource extends Resource
                     ->required()
                     ->label('Cantidad'),
 
+                Forms\Components\DatePicker::make('purchase_date')
+                    ->required()
+                    ->label('Fecha de Compra')
+                    ->default(now()), // Establece la fecha actual como valor predeterminado
+
                 Forms\Components\TextInput::make('purchase_price')
                     ->numeric()
                     ->required()
@@ -52,9 +57,6 @@ class BatchResource extends Resource
                     ->prefix('$')
                     ->label('Precio de Venta'),
 
-                Forms\Components\DatePicker::make('purchase_date')
-                    ->required()
-                    ->label('Fecha de Compra'),
 
                 Forms\Components\TextInput::make('purchase_document_url')
                     ->label('Documento de Compra'),
@@ -65,8 +67,24 @@ class BatchResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product.name')->label('Producto'),
-                Tables\Columns\TextColumn::make('supplier.name')->label('Proveedor'),
+                Tables\Columns\TextColumn::make('product.name')
+                    ->label('Producto')
+                    ->limit(15)
+                    ->tooltip(fn ($record) => $record->product?->name ?? 'N/A')
+                    ->searchable(), // Habilitar búsqueda por nombre
+
+                Tables\Columns\TextColumn::make('supplier.name')
+                    ->label('Proveedor')
+                    ->searchable(), // Si deseas permitir la búsqueda por proveedor
+
+                Tables\Columns\TextColumn::make('product.sku')
+                    ->label('SKU')
+                    ->searchable(), // Habilitar búsqueda por SKU
+
+                Tables\Columns\TextColumn::make('product.cva_key')
+                    ->label('Clave CVA')
+                    ->searchable(), // Habilitar búsqueda por clave CVA
+
                 Tables\Columns\TextColumn::make('quantity')->label('Cantidad'),
                 Tables\Columns\TextColumn::make('purchase_price')->label('Precio Compra')->money('MXN'),
                 Tables\Columns\TextColumn::make('sale_price')->label('Precio Venta')->money('MXN'),
@@ -85,6 +103,7 @@ class BatchResource extends Resource
                 ]),
             ]);
     }
+
 
     public static function getRelations(): array
     {
