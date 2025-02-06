@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Features\Ftp\Data\Repositories\FtpRepositoryImpl;
+use App\Features\Ftp\Domain\Repositories\FtpRepositoryInterface;
 use App\Http\Controllers\Api\V1\CVAController;
-use App\Http\Controllers\Api\V1\Inventory\InventoryController;
+use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
+use App\Http\Controllers\Api\V1\Product\ProductController;
 use App\Repositories\CVARepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,8 +18,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(CVAController::class, function ($app) {
-            return new CVAController($app->make(CVARepository::class), $app->make(InventoryController::class));
+            return new CVAController($app->make(CVARepository::class), $app->make(ProductController::class), $app->make(ExternalProductDataController::class));
         });
+
+        // Vincula la interfaz con su implementación
+        $this->app->bind(FtpRepositoryInterface::class, FtpRepositoryImpl::class);
     }
 
     /**

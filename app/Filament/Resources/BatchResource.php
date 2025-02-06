@@ -3,20 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BatchResource\Pages;
-use App\Filament\Resources\BatchResource\RelationManagers;
 use App\Models\Batch;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Features\Ftp\Domain\Repositories\FtpRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 
 class BatchResource extends Resource
 {
     protected static ?string $model = Batch::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function getNavigationLabel(): string
@@ -33,6 +31,14 @@ class BatchResource extends Resource
     {
         return 'Lote'; // Nombre en singular
     }
+
+    // Método estático para obtener el repositorio FTP
+    public static function getFtpRepository()
+    {
+        // Asegúrate de que estás instanciando correctamente el repositorio FTP
+        return app(FtpRepositoryInterface::class);
+    }
+
 
     public static function form(Form $form): Form
     {
@@ -86,8 +92,30 @@ class BatchResource extends Resource
                     ]),
 
 
-                Forms\Components\TextInput::make('purchase_document_url')
-                    ->label('Documento de Compra'),
+                // Campo para subir el archivo
+                Forms\Components\FileUpload::make('purchase_document_url')
+                    ->label('Documento de Compra')
+                    ->directory('batch-documents')
+                    ->preserveFilenames()
+                    ->acceptedFileTypes(['application/pdf', 'image/*'])
+                    ->maxSize(10240)
+                    ->required()
+                    ->afterStateUpdated(function ($state, $record) {
+                        // Obtener el repositorio FTP usando el método estático
+                        $ftpRepository = BatchResource::getFtpRepository();
+
+                        if ($state) {
+                            $filePath = $ftpRepository->saveBatchDocumentFile($record->id, $state);
+
+                            Log::debug($filePath);
+
+                            // Actualizar la URL en la base de datos
+                            $record->purchase_document_url = $filePath;
+                            $record->save();
+
+                            Log::debug("Archivo guardado en FTP: {$filePath}");
+                        }
+                    }),
             ]);
     }
 
