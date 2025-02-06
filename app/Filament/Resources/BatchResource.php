@@ -55,7 +55,20 @@ class BatchResource extends Resource
                     ->numeric()
                     ->required()
                     ->prefix('$')
-                    ->label('Precio de Venta'),
+                    ->label('Precio de Venta')
+                    ->rules([
+                        function ($get) {
+                            return function (string $attribute, $value, $fail) use ($get) {
+                                // Obtener el precio de compra desde el estado del formulario
+                                $purchasePrice = $get('purchase_price');
+
+                                // Validar que el precio de venta no sea menor o igual al precio de compra
+                                if ($value <= $purchasePrice) {
+                                    $fail("El precio de venta no puede ser menor o igual al precio de compra.");
+                                }
+                            };
+                        },
+                    ]),
 
 
                 Forms\Components\TextInput::make('purchase_document_url')
