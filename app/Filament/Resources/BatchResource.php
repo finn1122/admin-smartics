@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use App\Features\Ftp\Domain\Repositories\FtpRepositoryInterface;
 use Illuminate\Support\Facades\Log;
+use Filament\Forms\Components\Actions\Action;
 
 class BatchResource extends Resource
 {
@@ -95,11 +96,12 @@ class BatchResource extends Resource
                 // Campo para subir el archivo
                 Forms\Components\FileUpload::make('purchase_document_url')
                     ->label('Documento de Compra')
-                    ->directory('batch-documents')
                     ->preserveFilenames()
                     ->acceptedFileTypes(['application/pdf', 'image/*'])
                     ->maxSize(10240)
                     ->required()
+                    ->downloadable()
+                    ->dehydrated(false) // Evita que el campo actualice automáticamente la base de datos
                     ->afterStateUpdated(function ($state, $record) {
                         // Obtener el repositorio FTP usando el método estático
                         $ftpRepository = BatchResource::getFtpRepository();
@@ -107,7 +109,7 @@ class BatchResource extends Resource
                         if ($state) {
                             $filePath = $ftpRepository->saveBatchDocumentFile($record->id, $state);
 
-                            Log::debug($filePath);
+                            Log::debug('Ruta del archivo guardado: ' . $filePath);
 
                             // Actualizar la URL en la base de datos
                             $record->purchase_document_url = $filePath;
@@ -116,6 +118,13 @@ class BatchResource extends Resource
                             Log::debug("Archivo guardado en FTP: {$filePath}");
                         }
                     }),
+                Forms\Components\Actions::make([
+                    Action::make('download_document')
+                        ->label('Ver/Descargar Documento')
+                        ->visible(fn ($record) => $record && $record->purchase_document_url)
+                        ->url(fn ($record) => $record->purchase_document_url, true),
+                ]),
+
             ]);
     }
 
