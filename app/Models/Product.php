@@ -43,12 +43,6 @@ class Product extends Model
         return $this->belongsToMany(Supplier::class, 'inventories', 'product_id', 'supplier_id')
             ->withPivot('quantity', 'purchase_date');
     }
-
-    // Relación con la tabla galleries (uno a muchos)
-    public function galleries()
-    {
-        return $this->hasMany(Gallery::class);
-    }
     // En Product.php
     public function batches()
     {
@@ -60,4 +54,10 @@ class Product extends Model
     {
         return $this->hasMany(ExternalProductData::class);
     }
+
+    public function gallery()
+    {
+        return $this->hasMany(Gallery::class);
+    }
+
 }

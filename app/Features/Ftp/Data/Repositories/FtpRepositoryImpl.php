@@ -77,4 +77,12 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $this->saveFileToFtp($directory, $file);
     }
+    public function saveGalleryImage($productId, $image)
+    {
+        Log::info('saveGalleryImage');
+        // Directorio donde se almacenará la imagen de perfil de la panadería
+        $directory = sprintf(self::PRODUCT_GALLERY_PATH, $productId);
+
+        return $this->saveFileToFtp($directory, $image);
+    }
 }
