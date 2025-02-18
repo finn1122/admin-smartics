@@ -55,7 +55,8 @@ class GalleryRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\ImageColumn::make('image_url')
                     ->label('Imagen')
-                    ->size(80),
+                    ->size(80)
+                ->circular(),
             ])
             ->filters([])
             ->headerActions([

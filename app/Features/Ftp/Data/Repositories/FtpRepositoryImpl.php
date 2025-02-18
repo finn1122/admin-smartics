@@ -29,11 +29,14 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
             throw new \Exception('El archivo no es válido.');
         }
 
-        // Definir el nombre del archivo
-        $fileName = time() . '_' . $file->getClientOriginalName();
+        // Obtener el nombre original del archivo
+        $originalName = $file->getClientOriginalName();
+
+        // Limpiar el nombre del archivo
+        $cleanFileName = time() . '_' . $this->sanitizeFileName($originalName);
 
         // Ruta completa del archivo en el servidor FTP
-        $filePath = $directory . '/' . $fileName;
+        $filePath = $directory . '/' . $cleanFileName;
 
         try {
             // Abrir el archivo en modo lectura
@@ -65,6 +68,23 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
         }
 
         return $filePath;
+    }
+
+    /**
+     * Sanitiza el nombre del archivo eliminando caracteres especiales y espacios
+     */
+    private function sanitizeFileName($fileName)
+    {
+        // Convertir a minúsculas
+        $fileName = strtolower($fileName);
+
+        // Reemplazar espacios con guiones bajos
+        $fileName = str_replace(' ', '_', $fileName);
+
+        // Eliminar caracteres especiales dejando solo letras, números, guiones bajos y puntos
+        $fileName = preg_replace('/[^a-z0-9_\.-]/', '', $fileName);
+
+        return $fileName;
     }
 
 
