@@ -69,10 +69,6 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $filePath;
     }
-
-    /**
-     * Sanitiza el nombre del archivo eliminando caracteres especiales y espacios
-     */
     private function sanitizeFileName($fileName)
     {
         // Convertir a minúsculas
@@ -86,8 +82,6 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $fileName;
     }
-
-
     public function saveBatchDocumentFile($batchId, $file)
     {
         Log::info('saveBatchDocumentFile');
@@ -104,5 +98,41 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
         $directory = sprintf(self::PRODUCT_GALLERY_PATH, $productId);
 
         return $this->saveFileToFtp($directory, $image);
+    }
+    /**
+     * Eliminar un archivo del servidor FTP.
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    public function deleteFileFromFtp($filePath)
+    {
+        Log::info('Iniciando deleteFileFromFtp', ['filePath' => $filePath]);
+
+        try {
+            // Verificar si el archivo existe en el servidor FTP
+            if (Storage::disk('ftp')->exists($filePath)) {
+                // Eliminar el archivo
+                $deleteResult = Storage::disk('ftp')->delete($filePath);
+
+                if ($deleteResult) {
+                    Log::info('Archivo eliminado exitosamente.', ['filePath' => $filePath]);
+                    return true;
+                } else {
+                    Log::error('Error al eliminar el archivo del servidor FTP.', ['filePath' => $filePath]);
+                    throw new \Exception('Error al eliminar el archivo del servidor FTP.');
+                }
+            } else {
+                Log::warning('El archivo no existe en el servidor FTP.', ['filePath' => $filePath]);
+                throw new \Exception('El archivo no existe en el servidor FTP.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción en deleteFileFromFtp:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e; // Relanzar la excepción para manejarla en un nivel superior
+        }
     }
 }

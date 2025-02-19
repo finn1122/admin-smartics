@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Api\V1\Product;
+use App\Features\Ftp\Domain\Repositories\FtpRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Features\Ftp\Data\Repositories\FtpRepositoryImpl;
 use App\Models\Gallery;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class ProductGalleryController extends Controller
 
     protected $ftpRepository;
 
-    public function __construct(FtpRepositoryImpl $ftpRepository)
+    public function __construct(FtpRepositoryInterface $ftpRepository)
     {
         $this->ftpRepository = $ftpRepository;
     }
@@ -74,15 +74,25 @@ class ProductGalleryController extends Controller
 
     public function deleteImage($imageId)
     {
-        $image = Gallery::findOrFail($imageId);
+        try {
+            $image = Gallery::findOrFail($imageId);
 
-        // Eliminar la imagen del FTP
-        Storage::disk('ftp')->delete($image->image_url);
+            // Eliminar la imagen del servidor FTP
+            $this->ftpRepository->deleteFileFromFtp($image->getRawOriginal('image_url'));
 
-        // Eliminar el registro de la BD
-        $image->delete();
+            // Eliminar el registro de la base de datos
+            $image->delete();
 
-        return response()->json(['message' => 'Imagen eliminada correctamente']);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar la imagen:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json(['success' => false, 'error' => 'No se pudo eliminar la imagen'], 500);
+        }
     }
 
 }
