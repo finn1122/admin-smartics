@@ -129,7 +129,7 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
                 // Acción personalizada para administrar imágenes
                 Tables\Actions\Action::make('manageGallery')
-                    ->label('Administrar Imágenes')
+                    ->label('')
                     ->url(function (Product $record): string {
                         Log::info('Generando URL para ManageGallery', ['product_id' => $record->id]);
                         return ProductResource::getUrl('gallery', ['record' => $record->id]);
