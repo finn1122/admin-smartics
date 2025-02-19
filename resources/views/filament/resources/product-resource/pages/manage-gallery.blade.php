@@ -123,6 +123,10 @@
                 <div id="delete-modal-loader" class="hidden mt-4 flex justify-center">
                     <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
                 </div>
+                <!-- Loader para la subida de imágenes -->
+                <div id="upload-loader" class="hidden mt-4 flex justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -146,6 +150,9 @@
         document.getElementById('upload-form').addEventListener('submit', function(event) {
             event.preventDefault(); // Evitar recarga
 
+            // Mostrar el loader
+            document.getElementById('upload-loader').classList.remove('hidden');
+
             const formData = new FormData(this);
             fetch(this.action, {
                 method: 'POST',
@@ -156,26 +163,28 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    // Ocultar el loader
+                    document.getElementById('upload-loader').classList.add('hidden');
+
                     const messageBox = document.getElementById('response-message');
                     if (data.error) {
                         messageBox.textContent = `❌ ${data.error}`;
                         messageBox.style.backgroundColor = '#DC2626';
-                        messageBox.className = "p-4 rounded-lg mb-6 text-white text-center font-medium";
                     } else {
                         messageBox.textContent = "✅ Imagen subida correctamente";
                         messageBox.style.backgroundColor = '#10B981';
-                        messageBox.className = "p-4 rounded-lg mb-6 text-white text-center font-medium";
                         setTimeout(() => location.reload(), 1500); // Recargar para mostrar la imagen nueva
                     }
                     messageBox.classList.remove('hidden');
-                    // Animación de scroll al mensaje
                     messageBox.scrollIntoView({ behavior: 'smooth' });
                 })
                 .catch(() => {
+                    // Ocultar el loader en caso de error
+                    document.getElementById('upload-loader').classList.add('hidden');
+
                     const messageBox = document.getElementById('response-message');
                     messageBox.textContent = "❌ Hubo un error al subir la imagen";
                     messageBox.style.backgroundColor = '#DC2626';
-                    messageBox.className = "p-4 rounded-lg mb-6 text-white text-center font-medium";
                     messageBox.classList.remove('hidden');
                 });
         });
@@ -236,7 +245,54 @@
 
         function executeDelete() {
             if (currentDeleteId) {
-                document.getElementById(`delete-form-${currentDeleteId}`).submit();
+                // Mostrar el loader
+                document.getElementById('delete-modal-loader').classList.remove('hidden');
+
+                const form = document.getElementById(`delete-form-${currentDeleteId}`);
+                const formData = new FormData(form);
+                const url = form.action;
+                const method = form.method;
+
+                fetch(url, {
+                    method: method,
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Ocultar el loader
+                        document.getElementById('delete-modal-loader').classList.add('hidden');
+
+                        if (data.success) {
+                            const messageBox = document.getElementById('response-message');
+                            messageBox.textContent = "✅ Imagen eliminada correctamente";
+                            messageBox.style.backgroundColor = '#10B981';
+                            messageBox.classList.remove('hidden');
+
+                            // Cerrar el modal de confirmación
+                            closeDeleteModal();
+
+                            // Recargar la página después de 1.5 segundos
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            const messageBox = document.getElementById('response-message');
+                            messageBox.textContent = "❌ " + data.error;
+                            messageBox.style.backgroundColor = '#DC2626';
+                            messageBox.classList.remove('hidden');
+                        }
+                    })
+                    .catch(() => {
+                        // Ocultar el loader en caso de error
+                        document.getElementById('delete-modal-loader').classList.add('hidden');
+
+                        const messageBox = document.getElementById('response-message');
+                        messageBox.textContent = "❌ Hubo un error al eliminar la imagen";
+                        messageBox.style.backgroundColor = '#DC2626';
+                        messageBox.classList.remove('hidden');
+                    });
             }
         }
     </script>

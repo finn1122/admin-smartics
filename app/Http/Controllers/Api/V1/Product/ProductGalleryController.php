@@ -83,7 +83,7 @@ class ProductGalleryController extends Controller
             // Eliminar el registro de la base de datos
             $image->delete();
 
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true, 'message' => 'Imagen eliminada correctamente']);
         } catch (\Exception $e) {
             Log::error('Error al eliminar la imagen:', [
                 'message' => $e->getMessage(),
