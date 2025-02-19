@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers\GalleryRelationManager;
 use App\Models\ExternalProductData;
-use App\Models\Gallery;
 use App\Models\Product;
 use App\Models\Supplier;
 use Filament\Forms;
@@ -13,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 
 class ProductResource extends Resource
 {
@@ -101,11 +101,6 @@ class ProductResource extends Resource
                 ->boolean()
                 ->trueIcon('heroicon-o-check-circle')
                 ->falseIcon('heroicon-o-x-circle'),
-            // 📌 Nueva columna para mostrar imágenes de la galería
-            Tables\Columns\ImageColumn::make('gallery.image_url')
-                ->label('Galería')
-                ->size(50) // Tamaño de miniatura
-                ->limit(3), // Máximo 3 imágenes visibles en la tabla
         ];
 
         // 🔹 Obtener todos los proveedores y crear columnas dinámicamente
@@ -132,6 +127,14 @@ class ProductResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                // Acción personalizada para administrar imágenes
+                Tables\Actions\Action::make('manageGallery')
+                    ->label('Administrar Imágenes')
+                    ->url(function (Product $record): string {
+                        Log::info('Generando URL para ManageGallery', ['product_id' => $record->id]);
+                        return ProductResource::getUrl('gallery', ['record' => $record->id]);
+                    })                    ->icon('heroicon-o-photo') // Icono para el botón
+                    ->color('success'), // Color del botón
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -139,11 +142,10 @@ class ProductResource extends Resource
                 ]),
             ]);
     }
-
     public static function getRelations(): array
     {
         return [
-            GalleryRelationManager::class
+            GalleryRelationManager::class,
         ];
     }
 
@@ -153,6 +155,7 @@ class ProductResource extends Resource
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'gallery' => Pages\ManageGallery::route('/{record}/gallery'),
         ];
     }
 }

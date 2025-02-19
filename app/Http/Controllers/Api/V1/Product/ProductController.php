@@ -1,9 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\V1\Product;
 use App\Http\Controllers\Controller;
-use App\Models\Inventory;
 use App\Models\Product;
-use App\Models\ProductSupplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
