@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers\GalleryRelationManager;
 use App\Models\ExternalProductData;
 use App\Models\Product;
 use App\Models\Supplier;
@@ -144,9 +143,7 @@ class ProductResource extends Resource
     }
     public static function getRelations(): array
     {
-        return [
-            GalleryRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array
