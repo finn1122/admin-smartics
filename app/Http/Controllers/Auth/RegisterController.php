@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Email\EmailController;
+use App\Http\Controllers\Api\V1\Email\EmailController;
 use App\Mail\WelcomeEmail;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -46,8 +46,6 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
             'active' => false, // Usuario inactivo hasta verificar email
         ]);
-
-        $user->assignRole('admin');
 
         // Generar URL de verificación
         $verificationUrl = URL::temporarySignedRoute(
