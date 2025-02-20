@@ -12,7 +12,7 @@ class UserService
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'roles' => $user->roles->pluck('name'), // Asumiendo que el modelo User tiene una relación roles
+            //'roles' => $user->roles->pluck('name'), // Asumiendo que el modelo User tiene una relación roles
             // Añadir más información según sea necesario
         ];
     }

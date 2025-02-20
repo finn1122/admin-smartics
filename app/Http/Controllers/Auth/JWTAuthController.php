@@ -34,6 +34,8 @@ class JWTAuthController extends Controller
             // Obtener el usuario autenticado.
             $user = auth()->user();
 
+            Log::debug($user);
+
             // Verificar si el usuario ha verificado su correo electrónico.
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['error' => 'Email not verified'], 403); // Código de estado 403 para prohibido.
@@ -45,7 +47,8 @@ class JWTAuthController extends Controller
             }
 
             // (opcional) Adjuntar el rol al token.
-            $token = JWTAuth::claims(['role' => $user->getRoleNames()])->fromUser($user);
+            //$token = JWTAuth::claims(['role' => $user->getRoleNames()])->fromUser($user);
+            $token = JWTAuth::fromUser($user);
 
             $userProfile = $this->userService->getUserProfile($user);
 
