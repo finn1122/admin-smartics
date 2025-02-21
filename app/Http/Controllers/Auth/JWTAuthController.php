@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Cookie;
 
 class JWTAuthController extends Controller
 {
@@ -18,7 +19,6 @@ class JWTAuthController extends Controller
     {
         $this->userService = $userService;
     }
-    // User login
     public function login(Request $request)
     {
         Log::info('login');
@@ -26,37 +26,30 @@ class JWTAuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         try {
-            // Intentar autenticar al usuario con las credenciales proporcionadas.
             if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json(['error' => 'Invalid credentials'], 401);
             }
 
-            // Obtener el usuario autenticado.
             $user = auth()->user();
-
             Log::debug($user);
 
-            // Verificar si el usuario ha verificado su correo electrónico.
             if (!$user->hasVerifiedEmail()) {
-                return response()->json(['error' => 'Email not verified'], 403); // Código de estado 403 para prohibido.
+                return response()->json(['error' => 'Email not verified'], 403);
             }
 
-            // Verificar si el usuario está activo.
             if (!$user->active) {
-                return response()->json(['error' => 'User account is inactive'], 403); // Usuario inactivo.
+                return response()->json(['error' => 'User account is inactive'], 403);
             }
 
-            // (opcional) Adjuntar el rol al token.
-            //$token = JWTAuth::claims(['role' => $user->getRoleNames()])->fromUser($user);
-            $token = JWTAuth::fromUser($user);
-
-            $userProfile = $this->userService->getUserProfile($user);
+            // Guardar el token en una cookie HTTP segura
+            $cookie = Cookie::make('jwt_token', $token, 60, '/', null, false, true);
 
             Log::debug('login success');
             return response()->json([
-                'token' => $token,
-                'user' => $userProfile
-            ]);
+                'message' => 'Login successful',
+                'user' => $user
+            ])->withCookie($cookie); // Adjuntar cookie a la respuesta
+
         } catch (JWTException $e) {
             return response()->json(['error' => 'Could not create token'], 500);
         }
