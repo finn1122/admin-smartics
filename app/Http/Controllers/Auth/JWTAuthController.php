@@ -47,6 +47,7 @@ class JWTAuthController extends Controller
             Log::debug('login success');
             return response()->json([
                 'message' => 'Login successful',
+                'authenticated' => true,
                 'user' => $user
             ])->withCookie($cookie); // Adjuntar cookie a la respuesta
 
