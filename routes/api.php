@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Auth\JWTAuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Middleware\JwtMiddleware;
@@ -27,4 +28,15 @@ Route::prefix('v1')->namespace('App\Http\Controllers\Api\V1')->group(function ()
         ->middleware(['throttle:6,1'])
         ->name('verification.send');
 
+    // Grupo de rutas que requieren autenticación
+    Route::middleware([JwtMiddleware::class])->group(function () {
+
+        // [User]
+        Route::prefix('user/{user_id}')->group(function () {
+            Route::get('/', [UserController::class, 'getUserById']);
+        });
+
+    });
 });
+
+

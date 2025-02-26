@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -64,6 +65,9 @@ class JWTAuthController extends Controller
             // Guardar el token en una cookie HTTP segura
             $cookieExpiration = $rememberMe ? 7 * 24 * 60 : 60; // 7 días o 1 hora
             $cookie = Cookie::make('jwt_token', $token, $cookieExpiration, '/', null, false, true);
+
+            // Formatear respuesta
+            $user = New UserResource($user);
 
             Log::debug('login success');
             return response()->json([
