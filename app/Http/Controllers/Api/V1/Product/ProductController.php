@@ -21,6 +21,7 @@ class ProductController extends Controller
                 'sku'               => 'required|string|max:100|unique:products,sku',
                 'warranty'          => 'nullable|string|max:100',
                 'brandId'          => 'required|exists:brands,id',
+                'groupId'          => 'required|exists:groups,id',
                 'active'            => 'required|boolean',
             ]);
 
@@ -31,6 +32,7 @@ class ProductController extends Controller
                 'sku'               => $validatedData['sku'],
                 'warranty'          => $validatedData['warranty'],
                 'brand_id'          => $validatedData['brandId'], // Asignando el valor de 'brand_id'
+                'group_id'          => $validatedData['groupId'],
                 'active'            => $validatedData['active'],
             ]);
 

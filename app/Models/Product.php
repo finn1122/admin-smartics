@@ -15,6 +15,7 @@ class Product extends Model
         'sku',
         'warranty',
         'brand_id',
+        'group_id',
         'product_type',
         'active',
     ];
