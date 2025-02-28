@@ -60,4 +60,52 @@ class CVARepository
 
         return $jsonResponse;
     }
+    /**
+     * Obtiene todos los productos
+     * @return array
+     */
+    public function getAllProducts(): array
+    {
+        Log::info('CVARepository@getAllProducts');
+        $enpointUrl = 'catalogo_clientes_xml/lista_precios.xml';
+
+        // Parámetros para la solicitud HTTP
+        $params = [
+            'cliente' => $this->clienteId,
+            'marca' => '%',
+            'grupo' => '%',
+            'clave' => '%',
+            'codigo' => '%',
+        ];
+
+        Log::debug('Solicitando datos desde: ' . $this->baseUrl . $enpointUrl, $params);
+
+        try {
+            // Hacer la solicitud HTTP con un timeout de 120 segundos
+            $XMLResponse = Http::timeout(120)->get($this->baseUrl . $enpointUrl, $params);
+
+            // Verificar si la solicitud fue exitosa
+            if (!$XMLResponse->successful()) {
+                throw new \Exception("Error en la solicitud HTTP. Código de respuesta: " . $XMLResponse->status(), $XMLResponse->status());
+            }
+
+            // Parsear la respuesta XML
+            $response = simplexml_load_string($XMLResponse->body());
+
+            if ($response === false) {
+                throw new \Exception("Error al parsear el XML.", 500);
+            }
+
+            // Convertir el XML a un array
+            $jsonResponse = json_decode(json_encode($response), true);
+
+            return $jsonResponse;
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Timeout al realizar la solicitud HTTP: ' . $e->getMessage());
+            throw new \Exception("La solicitud HTTP tardó demasiado en completarse. Por favor, inténtalo de nuevo más tarde.", 504);
+        } catch (\Exception $e) {
+            Log::error('Error en getAllProducts: ' . $e->getMessage());
+            throw $e;
+        }
+    }
 }

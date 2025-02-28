@@ -24,8 +24,6 @@ class JWTAuthController extends Controller
     public function login(Request $request)
     {
         Log::info('login');
-        Log::debug($request);
-
         // Validación de la solicitud
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email', 'max:255'],
@@ -75,7 +73,7 @@ class JWTAuthController extends Controller
                 'authenticated' => true,
                 'user' => $user,
                 'token' => $token, // Opcional: Devuelve el token en la respuesta
-            ])->withCookie($cookie); // Adjuntar cookie a la respuesta
+            ]); // Adjuntar cookie a la respuesta
 
         } catch (JWTException $e) {
             return response()->json(['error' => 'Could not create token'], 500);
@@ -97,8 +95,13 @@ class JWTAuthController extends Controller
     // User logout
     public function logout()
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
-
-        return response()->json(['message' => 'Successfully logged out']);
+        try {
+            Log::info('logout');
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json(['message' => 'success']);
+        }catch (\Exception $e){
+            Log::error($e);
+            return response()->json($e->getMessage(), $e->getStatusCode());
+        }
     }
 }

@@ -5,7 +5,6 @@ use AllowDynamicProperties;
 use App\Filament\Resources\CvaApiResource;
 use App\Http\Controllers\Api\V1\CVAController;
 use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
-use App\Http\Controllers\Api\V1\Inventory\InventoryController;
 use App\Http\Controllers\Api\V1\Product\ProductController;
 use App\Models\Brand;
 use App\Repositories\CVARepository;

@@ -31,6 +31,7 @@ Route::prefix('v1')->namespace('App\Http\Controllers\Api\V1')->group(function ()
     // Grupo de rutas que requieren autenticación
     Route::middleware([JwtMiddleware::class])->group(function () {
 
+        Route::post('logout', [JWTAuthController::class, 'logout']);
         // [User]
         Route::prefix('user/{user_id}')->group(function () {
             Route::get('/', [UserController::class, 'getUserById']);

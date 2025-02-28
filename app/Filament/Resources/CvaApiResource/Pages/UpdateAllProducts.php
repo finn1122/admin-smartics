@@ -1,18 +1,22 @@
 <?php
 namespace App\Filament\Resources\CvaApiResource\Pages;
 
+use AllowDynamicProperties;
 use App\Filament\Resources\CvaApiResource;
+use App\Http\Controllers\Api\V1\CVAController;
+use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
+use App\Http\Controllers\Api\V1\Product\ProductController;
 use App\Models\Brand;
+use App\Repositories\CVARepository;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Log;
 use Filament\Notifications\Notification;
 
-class UpdateAllProducts extends Page implements HasForms
+#[AllowDynamicProperties] class UpdateAllProducts extends Page implements HasForms
 {
     use InteractsWithForms;
 
@@ -42,14 +46,70 @@ class UpdateAllProducts extends Page implements HasForms
     {
         Log::info('updateAllProducts');
 
+        try {
+
+            // ✅ Instanciar CVAController aquí para evitar que sea null
+            $cvaRepository = app()->make(CVARepository::class);
+            $externalProductDataController = app()->make(ExternalProductDataController::class);
+            $productController = app()->make(ProductController::class);
+            $this->CVAController = new CVAController($cvaRepository, $productController, $externalProductDataController);
+
+            // ✅ Verifica que la instancia no sea null
+            if (!$this->CVAController) {
+                Log::error('CVAController sigue siendo null');
+                throw new \Exception("CVAController no está instanciado correctamente.");
+            }
 
 
-        // Lógica de actualización de productos
-        // Enviar una notificación de éxito
-        Notification::make()
-            ->title('Actualización exitosa')
-            ->body('Todos los productos han sido actualizados correctamente.')
-            ->success()
-            ->send();
+            $response = $this->CVAController->getAllProducts();
+
+            // Convertir la respuesta en un array
+            $responseData = $response->getData(true); // Poner "true" convierte el JSON en un array asociativo
+
+            Log::debug($responseData);
+
+            // Verificar si la respuesta contiene el mensaje de éxito
+            if (!empty($responseData['message']) && $responseData['message'] === 'success') {
+                // Notificación de éxito
+                Notification::make()
+                    ->title('Actualización exitosa')
+                    ->body("Todos los productos han sido actualizados correctamente.")
+                    ->success()
+                    ->send();
+            } else {
+                // Notificación de error si la respuesta no es exitosa
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se pudo actualizar los productos. Por favor, inténtalo de nuevo.')
+                    ->danger()
+                    ->send();
+            }
+        } catch (\Exception $e) {
+            // Notificación de error si ocurre una excepción
+            Notification::make()
+                ->title('Error')
+                ->body('Ocurrió un error al intentar actualizar los productos.')
+                ->danger()
+                ->send();
+        }
     }
+
+    public function updateProductsByBrand()
+    {
+        Log::info('updateProductsByBrand');
+        // Validar el formulario
+        $this->validate([
+            'selectedBrand' => 'required|exists:brands,id',
+        ]);
+
+        // Obtener la marca seleccionada
+        $brand = Brand::find($this->selectedBrand);
+        Log::debug($brand);
+
+
+
+        // Limpiar el formulario después de la acción
+        $this->form->fill();
+    }
+
 }
