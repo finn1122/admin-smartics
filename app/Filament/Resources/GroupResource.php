@@ -38,7 +38,14 @@ class GroupResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->label('Name')
+                    ->required()
+                    ->maxLength(255),
+                // Campo para el estado activo/inactivo
+                Forms\Components\Toggle::make('active')
+                    ->label('Activa')
+                    ->default(true),
             ]);
     }
 
@@ -46,7 +53,18 @@ class GroupResource extends Resource
     {
         return $table
             ->columns([
-                //
+                // Columnas estándar
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
+                    ->limit(30)
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('active')
+                    ->label('Activa')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
             ])
             ->filters([
                 //
