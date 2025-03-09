@@ -33,13 +33,6 @@ class BatchResource extends Resource
         return 'Lote'; // Nombre en singular
     }
 
-    // Método estático para obtener el repositorio FTP
-    public static function getFtpRepository()
-    {
-        // Asegúrate de que estás instanciando correctamente el repositorio FTP
-        return app(FtpRepositoryInterface::class);
-    }
-
 
     public static function form(Form $form): Form
     {
@@ -101,29 +94,22 @@ class BatchResource extends Resource
                     ->maxSize(10240)
                     ->required()
                     ->downloadable()
+                    ->disk('public')
+                    ->directory('livewire-tmp')
                     ->dehydrated(false) // Evita que el campo actualice automáticamente la base de datos
-                    ->afterStateUpdated(function ($state, $record) {
-                        // Obtener el repositorio FTP usando el método estático
-                        $ftpRepository = BatchResource::getFtpRepository();
-
+                    ->afterStateUpdated(function ($state, $set) {
+                        // $state contiene el archivo subido
                         if ($state) {
-                            $filePath = $ftpRepository->saveBatchDocumentFile($record->id, $state);
-
-                            Log::debug('Ruta del archivo guardado: ' . $filePath);
-
-                            // Actualizar la URL en la base de datos
-                            $record->purchase_document_url = $filePath;
-                            $record->save();
-
-                            Log::debug("Archivo guardado en FTP: {$filePath}");
-                        }
-                    }),
+                            // Guarda la ruta y el nombre del archivo en una propiedad temporal
+                            $set('temp_file_path', $state->getPathname()); // Ruta completa del archivo
+                            $set('temp_file_name', $state->getClientOriginalName()); // Nombre original del archivo
+                        }}),
                 Forms\Components\Actions::make([
-                    Action::make('download_document')
-                        ->label('Ver/Descargar Documento')
-                        ->visible(fn ($record) => $record && $record->purchase_document_url)
-                        ->url(fn ($record) => $record->purchase_document_url, true),
-                ]),
+                        Action::make('download_document')
+                            ->label('Ver/Descargar Documento')
+                            ->visible(fn ($record) => $record && $record->purchase_document_url)
+                            ->url(fn ($record) => $record->purchase_document_url, true),
+                    ]),
 
             ]);
     }
