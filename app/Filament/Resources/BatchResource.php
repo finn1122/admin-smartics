@@ -58,7 +58,7 @@ class BatchResource extends Resource
                 Forms\Components\DatePicker::make('purchase_date')
                     ->required()
                     ->label('Fecha de Compra')
-                    ->default(now()), // Establece la fecha actual como valor predeterminado
+                    ->default(now()),
 
                 Forms\Components\TextInput::make('purchase_price')
                     ->numeric()
@@ -74,10 +74,7 @@ class BatchResource extends Resource
                     ->rules([
                         function ($get) {
                             return function (string $attribute, $value, $fail) use ($get) {
-                                // Obtener el precio de compra desde el estado del formulario
                                 $purchasePrice = $get('purchase_price');
-
-                                // Validar que el precio de venta no sea menor o igual al precio de compra
                                 if ($value <= $purchasePrice) {
                                     $fail("El precio de venta no puede ser menor o igual al precio de compra.");
                                 }
@@ -85,32 +82,36 @@ class BatchResource extends Resource
                         },
                     ]),
 
-
-                // Campo para subir el archivo
-                Forms\Components\FileUpload::make('purchase_document_url')
-                    ->label('Documento de Compra')
-                    ->preserveFilenames()
-                    ->acceptedFileTypes(['application/pdf', 'image/*'])
-                    ->maxSize(10240)
-                    ->required()
-                    ->downloadable()
-                    ->disk('public')
-                    ->directory('livewire-tmp')
-                    ->dehydrated(false) // Evita que el campo actualice automáticamente la base de datos
-                    ->afterStateUpdated(function ($state, $set) {
-                        // $state contiene el archivo subido
-                        if ($state) {
-                            // Guarda la ruta y el nombre del archivo en una propiedad temporal
-                            $set('temp_file_path', $state->getPathname()); // Ruta completa del archivo
-                            $set('temp_file_name', $state->getClientOriginalName()); // Nombre original del archivo
-                        }}),
-                Forms\Components\Actions::make([
+                // Contenedor flexible para el botón y el input de archivo
+                Forms\Components\Group::make([
+                    // Botón flotante en la parte superior derecha
+                    Forms\Components\Actions::make([
                         Action::make('download_document')
                             ->label('Ver/Descargar Documento')
                             ->visible(fn ($record) => $record && $record->purchase_document_url)
                             ->url(fn ($record) => $record->purchase_document_url, true),
                     ]),
-
+                    Forms\Components\Section::make('')
+                        ->schema([
+                            Forms\Components\FileUpload::make('purchase_document_url')
+                                ->label('Documento de Compra')
+                                ->preserveFilenames()
+                                ->acceptedFileTypes(['application/pdf', 'image/*'])
+                                ->maxSize(10240)
+                                ->required()
+                                ->downloadable()
+                                ->disk('public')
+                                ->directory('livewire-tmp')
+                                ->dehydrated(false)
+                                ->afterStateUpdated(function ($state, $set) {
+                                    if ($state) {
+                                        $set('temp_file_path', $state->getPathname());
+                                        $set('temp_file_name', $state->getClientOriginalName());
+                                    }
+                                }),
+                        ])
+                        ->extraAttributes(['style' => 'position: relative;']), // Permite posicionar el botón
+                ]),
             ]);
     }
 
