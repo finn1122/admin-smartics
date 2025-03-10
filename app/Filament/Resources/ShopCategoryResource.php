@@ -48,23 +48,18 @@ class ShopCategoryResource extends Resource
                 Forms\Components\Grid::make(2) // Dos columnas
                 ->schema([
                     // Columna para la imagen
-                    Forms\Components\FileUpload::make('image_url') // Usa image_url, no imageUrl
-                    ->label('Imagen')
-                        ->preserveFilenames() // Mantener el nombre original del archivo
-                        ->acceptedFileTypes(['image/*']) // Aceptar solo imágenes
-                        ->maxSize(10240) // Tamaño máximo de 10 MB
-                        ->required(false) // No es obligatorio si ya hay una imagen
-                        ->downloadable() // Permitir descargar la imagen
-                        ->disk('public') // Usar el disco "public"
-                        ->directory('shop-categories') // Carpeta donde se guardarán las imágenes
+                    Forms\Components\FileUpload::make('image_url')
+                        ->label('Imagen')
+                        ->preserveFilenames()
+                        ->acceptedFileTypes(['image/*'])
+                        ->maxSize(10240)
+                        ->required()
+                        ->downloadable()
+                        ->disk('public')
                         ->imagePreviewHeight('250') // Altura de la previsualización
-                        ->image() // Habilitar previsualización de imágenes
-                        ->panelAspectRatio('2:1') // Relación de aspecto del panel de previsualización
-                        ->panelLayout('integrated') // Diseño integrado del panel
-                        ->loadingIndicatorPosition('left') // Posición del indicador de carga
-                        ->removeUploadedFileButtonPosition('right') // Posición del botón de eliminar
-                        ->uploadButtonPosition('left') // Posición del botón de subir
-                        ->uploadProgressIndicatorPosition('left') // Posición del indicador de progreso
+                        ->dehydrated(false)
+                        ->storeFiles() // Guarda el archivo en el disco antes de que se elimine el temporal
+                        ->afterStateUpdated(function ($state, $set) {})
                         ->default(function ($record) use ($documentUrlService) {
                             // Si ya existe una imagen, generar la URL completa usando el servicio
                             if ($record && $record->image_url) {

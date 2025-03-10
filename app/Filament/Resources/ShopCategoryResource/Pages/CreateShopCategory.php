@@ -17,68 +17,43 @@ class CreateShopCategory extends CreateRecord
     protected function afterCreate(): void
     {
         Log::debug('afterCreate');
-
         // Accede al registro recién creado
         $record = $this->record;
 
         // Accede a los datos del formulario
         $data = $this->data;
 
-        // Verifica si hay un nombre de archivo
-        if (isset($data['temp_file_name'])) {
-            $fileName = $data['temp_file_name'];
-            Log::debug('Nombre del archivo: ' . $fileName);
+        Log::debug($data);
+        // Verifica si hay un archivo cargado
+        if (isset($data['image_url'])) {
+            // Accede al nombre del archivo dentro del array
+            $fileNames = $data['image_url'];
+            $fileName = reset($fileNames); // Obtén el primer archivo del array
 
-            // Construye la ruta relativa del archivo en el disco
-            $filePath = 'livewire-tmp/' . $fileName;
-            Log::debug('Ruta relativa del archivo: ' . $filePath);
+            // Obtén la ruta del archivo en el disco
+            $filePath = Storage::disk('public')->path($fileName);
 
-            // Verifica si el archivo existe en el disco
-            if (Storage::disk('public')->exists($filePath)) {
-                Log::debug('Archivo encontrado');
+            // Obtén el tipo MIME del archivo
+            $mimeType = Storage::disk('public')->mimeType($fileName);
 
-                // Obtén la ruta absoluta del archivo
-                $tempFilePath = Storage::disk('public')->path($filePath);
-                Log::debug('Ruta absoluta del archivo: ' . $tempFilePath);
+            // Crea un objeto SymfonyUploadedFile
+            $file = new SymfonyUploadedFile(
+                $filePath,
+                $fileName,
+                $mimeType,
+                UPLOAD_ERR_OK,
+                true
+            );
 
-                // Obtén el tipo MIME usando Storage
-                $mimeType = Storage::disk('public')->mimeType($filePath);
-                Log::debug('Tipo MIME del archivo: ' . $mimeType);
 
-                // Crea un objeto UploadedFile a partir de la ruta temporal
-                $file = new SymfonyUploadedFile(
-                    $tempFilePath,
-                    $fileName,
-                    $mimeType,
-                    UPLOAD_ERR_OK,
-                    true
-                );
+            // También puedes subir el archivo a un servidor FTP
+            $ftpRepository = self::getFtpRepository();
+            $path = $ftpRepository->saveShopCategoryImage($record->id, $file);
 
-                Log::debug('Objeto UploadedFile creado: ' . $file->getClientOriginalName());
+            $record->image_url = $path;
+            $record->save();
 
-                // Verifica si el archivo es válido
-                if ($file->isValid()) {
-                    Log::debug('El archivo es válido');
-
-                    // Obtén el repositorio FTP
-                    $ftpRepository = self::getFtpRepository();
-
-                    // Guarda el archivo en el servidor FTP
-                    $path = $ftpRepository->saveShopCategoryImage($record->id, $file);
-
-                    // Actualiza el campo purchase_document_url con la nueva ruta
-                    $record->image_url = $path;
-                    $record->save();
-
-                    // Elimina el archivo temporal si ya no es necesario
-                    Storage::disk('public')->delete($filePath);
-                    Log::debug('Archivo temporal eliminado: ' . $filePath);
-                } else {
-                    Log::error('El archivo no es válido: ' . $fileName);
-                }
-            } else {
-                Log::error('El archivo temporal no existe en el disco: ' . $filePath);
-            }
+            Log::debug($path);
         } else {
             Log::error('No se encontró el nombre del archivo en los datos del formulario.');
         }

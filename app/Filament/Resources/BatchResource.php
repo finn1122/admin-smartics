@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BatchResource\Pages;
 use App\Models\Batch;
+use App\Services\DocumentUrlService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -36,82 +37,103 @@ class BatchResource extends Resource
 
     public static function form(Form $form): Form
     {
+        // Obtén una instancia del servicio DocumentUrlService
+        $documentUrlService = app(DocumentUrlService::class);
+
         return $form
             ->schema([
-                Forms\Components\Select::make('product_id')
-                    ->relationship('product', 'name')
-                    ->required()
-                    ->label('Producto')
-                    ->searchable()
-                    ->preload(),
+                // Sección: Información del Producto
+                Forms\Components\Section::make('Información del Producto')
+                    ->schema([
+                        Forms\Components\Select::make('product_id')
+                            ->relationship('product', 'name')
+                            ->required()
+                            ->label('Producto')
+                            ->searchable()
+                            ->preload(),
 
-                Forms\Components\Select::make('supplier_id')
-                    ->relationship('supplier', 'name')
-                    ->required()
-                    ->label('Proveedor'),
+                        Forms\Components\Select::make('supplier_id')
+                            ->relationship('supplier', 'name')
+                            ->required()
+                            ->label('Proveedor'),
+                    ])
+                    ->collapsible(),
 
-                Forms\Components\TextInput::make('quantity')
-                    ->numeric()
-                    ->required()
-                    ->label('Cantidad'),
+                // Sección: Precios y Cantidad
+                Forms\Components\Section::make('Precios y Cantidad')
+                    ->schema([
+                        Forms\Components\TextInput::make('quantity')
+                            ->numeric()
+                            ->required()
+                            ->label('Cantidad'),
 
-                Forms\Components\DatePicker::make('purchase_date')
-                    ->required()
-                    ->label('Fecha de Compra')
-                    ->default(now()),
+                        Forms\Components\TextInput::make('purchase_price')
+                            ->numeric()
+                            ->required()
+                            ->prefix('$')
+                            ->label('Precio de Compra'),
 
-                Forms\Components\TextInput::make('purchase_price')
-                    ->numeric()
-                    ->required()
-                    ->prefix('$')
-                    ->label('Precio de Compra'),
+                        Forms\Components\TextInput::make('sale_price')
+                            ->numeric()
+                            ->required()
+                            ->prefix('$')
+                            ->label('Precio de Venta')
+                            ->rules([
+                                function ($get) {
+                                    return function (string $attribute, $value, $fail) use ($get) {
+                                        $purchasePrice = $get('purchase_price');
+                                        if ($value <= $purchasePrice) {
+                                            $fail("El precio de venta no puede ser menor o igual al precio de compra.");
+                                        }
+                                    };
+                                },
+                            ]),
+                    ])
+                    ->collapsible(),
 
-                Forms\Components\TextInput::make('sale_price')
-                    ->numeric()
-                    ->required()
-                    ->prefix('$')
-                    ->label('Precio de Venta')
-                    ->rules([
-                        function ($get) {
-                            return function (string $attribute, $value, $fail) use ($get) {
-                                $purchasePrice = $get('purchase_price');
-                                if ($value <= $purchasePrice) {
-                                    $fail("El precio de venta no puede ser menor o igual al precio de compra.");
+                // Sección: Fecha de Compra
+                Forms\Components\Section::make('Fecha de Compra')
+                    ->schema([
+                        Forms\Components\DatePicker::make('purchase_date')
+                            ->required()
+                            ->label('Fecha de Compra')
+                            ->default(now()),
+                    ])
+                    ->collapsible(),
+
+                // Sección: Documento de Compra
+                Forms\Components\Section::make('Documento de Compra')
+                    ->schema([
+                        Forms\Components\FileUpload::make('purchase_document_url')
+                            ->label('Documento de Compra')
+                            ->preserveFilenames()
+                            ->acceptedFileTypes(['application/pdf', 'image/*'])
+                            ->maxSize(10240)
+                            ->required()
+                            ->downloadable()
+                            ->disk('public')
+                            ->imagePreviewHeight('250') // Altura de la previsualización
+                            ->dehydrated(false)
+                            ->storeFiles() // Guarda el archivo en el disco antes de que se elimine el temporal
+                            ->afterStateUpdated(function ($state, $set) {})
+                            ->default(function ($record) use ($documentUrlService) {
+                                // Si ya existe una imagen, generar la URL completa usando el servicio
+                                if ($record && $record->purchase_document_url) {
+                                    return $documentUrlService->getFullUrl($record->purchase_document_url);
                                 }
-                            };
-                        },
-                    ]),
+                                return null; // Si no hay imagen, dejar el campo vacío
+                            }),
 
-                // Contenedor flexible para el botón y el input de archivo
-                Forms\Components\Group::make([
-                    // Botón flotante en la parte superior derecha
-                    Forms\Components\Actions::make([
-                        Action::make('download_document')
-                            ->label('Ver/Descargar Documento')
-                            ->visible(fn ($record) => $record && $record->purchase_document_url)
-                            ->url(fn ($record) => $record->purchase_document_url, true),
-                    ]),
-                    Forms\Components\Section::make('')
-                        ->schema([
-                            Forms\Components\FileUpload::make('purchase_document_url')
-                                ->label('Documento de Compra')
-                                ->preserveFilenames()
-                                ->acceptedFileTypes(['application/pdf', 'image/*'])
-                                ->maxSize(10240)
-                                ->required()
-                                ->downloadable()
-                                ->disk('public')
-                                ->directory('livewire-tmp')
-                                ->dehydrated(false)
-                                ->afterStateUpdated(function ($state, $set) {
-                                    if ($state) {
-                                        $set('temp_file_path', $state->getPathname());
-                                        $set('temp_file_name', $state->getClientOriginalName());
-                                    }
-                                }),
-                        ])
-                        ->extraAttributes(['style' => 'position: relative;']), // Permite posicionar el botón
-                ]),
+                        // Botón flotante para ver o descargar el documento
+                        Forms\Components\Actions::make([
+                            Action::make('download_document')
+                                ->label('Ver/Descargar Documento')
+                                ->visible(fn ($record) => $record && $record->purchase_document_url)
+                                ->url(fn ($record) => $record->purchase_document_url, true),
+                        ]),
+                    ])
+                    ->extraAttributes(['style' => 'position: relative;'])
+                    ->collapsible(),
             ]);
     }
 
