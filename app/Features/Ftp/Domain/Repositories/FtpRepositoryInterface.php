@@ -17,4 +17,6 @@ interface FtpRepositoryInterface
      */
     public function saveFileToFtp($directory, $file);
     public function saveBatchDocumentFile($batchId, $file);
+    public function deleteFileFromFtp($filePath);
+    public function saveShopCategoryImage($categoryId, $file);
 }

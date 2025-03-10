@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class DocumentUrlService
 {
     /**
@@ -9,6 +11,7 @@ class DocumentUrlService
      */
     public function getFullUrl($filePath)
     {
+        Log::info('getFullUrl');
         // Si no hay un valor, devolver null
         if (empty($filePath)) {
             return null;

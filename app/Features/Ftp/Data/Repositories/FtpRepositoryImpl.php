@@ -11,15 +11,9 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
     // Definir una constante para la ruta del perfil de la panadería
     const PRODUCT_GALLERY_PATH = 'product/%s/gallery';
     const BATCH_DOCUMENTS_PATH = 'batch/%s/documents';
+    const SHOP_CATEGORY_PATH = 'shop/category/%s/image';
 
-    /**
-     * Guardar el archivo en el servidor FTP.
-     *
-     * @param string $directory
-     * @param \Illuminate\Http\UploadedFile $file
-     * @return string
-     */
-    public function saveFileToFtp($directory, $file)
+    public function saveFileToFtp($directory, $file):string
     {
         Log::info('Iniciando saveFileToFtp');
 
@@ -69,7 +63,7 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $filePath;
     }
-    private function sanitizeFileName($fileName)
+    private function sanitizeFileName($fileName):string
     {
         // Convertir a minúsculas
         $fileName = strtolower($fileName);
@@ -82,7 +76,7 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $fileName;
     }
-    public function saveBatchDocumentFile($batchId, $file)
+    public function saveBatchDocumentFile($batchId, $file):string
     {
         Log::info('saveBatchDocumentFile');
         // Directorio donde se almacenará la imagen de perfil de la panadería
@@ -91,7 +85,7 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $this->saveFileToFtp($directory, $file);
     }
-    public function saveGalleryImage($productId, $image)
+    public function saveGalleryImage($productId, $image):string
     {
         Log::info('saveGalleryImage');
         // Directorio donde se almacenará la imagen de perfil de la panadería
@@ -99,13 +93,7 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $this->saveFileToFtp($directory, $image);
     }
-    /**
-     * Eliminar un archivo del servidor FTP.
-     *
-     * @param string $filePath
-     * @return bool
-     */
-    public function deleteFileFromFtp($filePath)
+    public function deleteFileFromFtp($filePath):string
     {
         Log::info('Iniciando deleteFileFromFtp', ['filePath' => $filePath]);
 
@@ -135,4 +123,13 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
             throw $e; // Relanzar la excepción para manejarla en un nivel superior
         }
     }
+    public function saveShopCategoryImage($categoryId, $file): string
+    {
+        Log::info('saveShopCategoryImange');
+        // Directorio donde se almacenará la imagen de perfil de la panadería
+        $directory = sprintf(self::SHOP_CATEGORY_PATH, $categoryId);
+
+        return $this->saveFileToFtp($directory, $file);
+    }
+
 }
