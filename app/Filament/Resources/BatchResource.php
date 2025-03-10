@@ -123,14 +123,6 @@ class BatchResource extends Resource
                                 }
                                 return null; // Si no hay imagen, dejar el campo vacío
                             }),
-
-                        // Botón flotante para ver o descargar el documento
-                        Forms\Components\Actions::make([
-                            Action::make('download_document')
-                                ->label('Ver/Descargar Documento')
-                                ->visible(fn ($record) => $record && $record->purchase_document_url)
-                                ->url(fn ($record) => $record->purchase_document_url, true),
-                        ]),
                     ])
                     ->extraAttributes(['style' => 'position: relative;'])
                     ->collapsible(),
