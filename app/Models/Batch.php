@@ -31,13 +31,4 @@ class Batch extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
-    /**
-     * Accesor para purchase_document_url.
-     * Usa el servicio para generar la URL completa.
-     */
-    public function getPurchaseDocumentUrlAttribute($value)
-    {
-        $documentUrlService = app(DocumentUrlService::class);
-        return $documentUrlService->getFullUrl($value);
-    }
 }
