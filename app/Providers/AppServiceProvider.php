@@ -7,9 +7,11 @@ use App\Features\Ftp\Domain\Repositories\FtpRepositoryInterface;
 use App\Http\Controllers\Api\V1\CVAController;
 use App\Http\Controllers\Api\V1\ExternalProductData\ExternalProductDataController;
 use App\Http\Controllers\Api\V1\Product\ProductController;
+use App\Livewire\GalleryModal;
 use App\Repositories\CVARepository;
 use App\Services\SendinblueService;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +37,5 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 }

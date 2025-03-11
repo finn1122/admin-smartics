@@ -1,13 +1,19 @@
 <?php
 namespace App\Filament\Resources\ShopCategoryResource\RelationManagers;
 
+use App\Filament\Resources\GalleryResource;
+use App\Filament\Resources\ProductResource;
+use App\Models\Product;
 use App\Services\DocumentUrlService;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use App\Livewire\GalleryModal; // Importa el componente Livewire
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class ProductsRelationManager extends RelationManager
 {
@@ -42,29 +48,40 @@ class ProductsRelationManager extends RelationManager
                     ->label('SKU')
                     ->sortable()
                     ->searchable(),
-                // Agrega más columnas si es necesario
             ])
+
             ->filters([
                 // Agrega filtros si es necesario
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make() // Acción para asignar productos a la categoría
-
-
-                ->form(fn (Tables\Actions\AttachAction $action): array => [
-                    // necesito mostrar la imagen del producto arriba del producto         $imageUrl = $documentUrlService->getFullUrl($product->imageUrl);
-                    $action->getRecordSelect() // Selecciona el producto
-                    ->label('Producto')
-                        ->required(),
-                ]),
-
+                Tables\Actions\AttachAction::make()
+                    ->form(fn (Tables\Actions\AttachAction $action): array => [
+                        $action->getRecordSelect()
+                            ->label('Producto')
+                            ->required()
+                            ->options(function () {
+                                // Obtén los productos que no están asociados a la categoría actual
+                                $existingProductIds = $this->getOwnerRecord()->products->pluck('id');
+                                return \App\Models\Product::whereNotIn('id', $existingProductIds)
+                                    ->pluck('name', 'id');
+                            }),
+                    ]),
             ])
             ->actions([
-                Tables\Actions\DetachAction::make(), // Acción para remover un producto de la categoría
+                Tables\Actions\Action::make('manageGallery')
+                    ->label('Galería')
+                    ->icon('heroicon-o-photo')
+                    ->color('success')
+                    ->modalContent(
+                        fn (Product $record) =>
+                        view('livewire.gallery-modal', ['product' => $record]))
+                    ->modalHeading('Galería de Imágenes'),
+
+                Tables\Actions\DetachAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DetachBulkAction::make(), // Acción masiva para remover productos
+                Tables\Actions\DetachBulkAction::make(),
             ]);
     }
 }
