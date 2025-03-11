@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Product extends Model
 {
@@ -59,6 +60,12 @@ class Product extends Model
     public function gallery()
     {
         return $this->hasMany(Gallery::class);
+    }
+
+    public function shopCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(ShopCategory::class, 'shop_category_products', 'product_id', 'category_id')
+            ->withPivot(['created_at', 'updated_at']);
     }
 
 }

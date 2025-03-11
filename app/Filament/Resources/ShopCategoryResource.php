@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ShopCategoryResource\Pages;
-use App\Filament\Resources\ShopCategoryResource\RelationManagers;
 use App\Models\ShopCategory;
 use App\Services\DocumentUrlService;
 use Filament\Forms;
@@ -11,9 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Log;
+use App\Filament\Resources\ShopCategoryResource\RelationManagers\ProductsRelationManager;
+
 
 class ShopCategoryResource extends Resource
 {
@@ -77,7 +75,7 @@ class ShopCategoryResource extends Resource
 
                         Forms\Components\Toggle::make('active')
                             ->label('Activo')
-                            ->inline(false),
+                            ->inline(true),
                     ])
                         ->columnSpan(1), // Ocupa una columna
                 ])
@@ -132,12 +130,12 @@ class ShopCategoryResource extends Resource
                 // Filtro para destacados
                 Tables\Filters\Filter::make('top')
                     ->label('Solo destacados')
-                    ->query(fn ($query) => $query->where('top', true)),
+                    ->query(fn ($query) => $query->where('top', false)),
 
                 // Filtro para activos
                 Tables\Filters\Filter::make('active')
                     ->label('Solo activos')
-                    ->query(fn ($query) => $query->where('active', true)),
+                    ->query(fn ($query) => $query->where('active', false)),
             ])
             ->actions([
                 // Acción para editar
@@ -153,7 +151,7 @@ class ShopCategoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ProductsRelationManager::class, // Registrar el RelationManagers aquí
         ];
     }
 
