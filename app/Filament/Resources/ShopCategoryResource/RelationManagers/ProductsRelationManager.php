@@ -7,7 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\HtmlString;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsRelationManager extends RelationManager
 {
@@ -27,9 +27,10 @@ class ProductsRelationManager extends RelationManager
             ]);
     }
 
-
     public function table(Table $table): Table
     {
+        $documentUrlService = app(DocumentUrlService::class);
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -41,40 +42,29 @@ class ProductsRelationManager extends RelationManager
                     ->label('SKU')
                     ->sortable()
                     ->searchable(),
+                // Agrega más columnas si es necesario
+            ])
+            ->filters([
+                // Agrega filtros si es necesario
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
-                    ->form(fn (Tables\Actions\AttachAction $action): array => [
-                        Forms\Components\Select::make('product_id')
-                            ->label('Producto')
-                            ->searchable()
-                            ->getSearchResultsUsing(fn (string $query) =>
-                            \App\Models\Product::where('name', 'like', "%{$query}%")
-                                ->pluck('name', 'id')
-                            )
-                            ->getOptionLabelUsing(fn ($value) => \App\Models\Product::find($value)?->name)
-                            ->live()
-                            ->afterStateUpdated(fn ($state, callable $set) =>
-                            $set('imageUrl', \App\Models\Product::find($state)?->gallery()->first()?->image_url)
-                            )
-                            ->required(),
+                Tables\Actions\AttachAction::make() // Acción para asignar productos a la categoría
 
-                        Forms\Components\Placeholder::make('image_preview')
-                            ->label('Vista previa de la imagen')
-                            ->content(fn ($get) => new HtmlString(
-                                $get('imageUrl')
-                                    ? "<img src='{$get('imageUrl')}' style='max-width: 150px; border-radius: 5px;' />"
-                                    : '<span style="color: gray;">No hay imagen disponible</span>'
-                            )),
-                    ]),
+
+                ->form(fn (Tables\Actions\AttachAction $action): array => [
+                    // necesito mostrar la imagen del producto arriba del producto         $imageUrl = $documentUrlService->getFullUrl($product->imageUrl);
+                    $action->getRecordSelect() // Selecciona el producto
+                    ->label('Producto')
+                        ->required(),
+                ]),
+
             ])
             ->actions([
-                Tables\Actions\DetachAction::make(),
+                Tables\Actions\DetachAction::make(), // Acción para remover un producto de la categoría
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DetachBulkAction::make(),
+                Tables\Actions\DetachBulkAction::make(), // Acción masiva para remover productos
             ]);
     }
-
 }
