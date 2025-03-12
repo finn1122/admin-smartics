@@ -42,10 +42,23 @@ class ShopCategoryResource extends Resource
 
         return $form
             ->schema([
-                // Campo de carga de imagen con previsualización
-                Forms\Components\Grid::make(2) // Dos columnas
+                // Sección para la imagen y los toggles
+                Forms\Components\Grid::make(1) // Una columna
                 ->schema([
-                    // Columna para la imagen
+                    // Toggles (encima de la imagen)
+                    Forms\Components\Grid::make(2) // Dos columnas para los toggles
+                    ->schema([
+                        Forms\Components\Toggle::make('top')
+                            ->label('¿Está dentro del top?')
+                            ->inline(false),
+
+                        Forms\Components\Toggle::make('active')
+                            ->label('Activo')
+                            ->inline(false),
+                    ])
+                        ->columns(2), // Dos columnas para los toggles
+
+                    // Imagen (debajo de los toggles)
                     Forms\Components\FileUpload::make('image_url')
                         ->label('Imagen')
                         ->preserveFilenames()
@@ -65,33 +78,32 @@ class ShopCategoryResource extends Resource
                             }
                             return null; // Si no hay imagen, dejar el campo vacío
                         }),
+                ]),
 
-                    // Columna para los toggles (esquina superior derecha)
-                    Forms\Components\Grid::make(2) // Una columna
+                // Sección para la información de la categoría
+                Forms\Components\Section::make('Información de la categoría')
                     ->schema([
-                        Forms\Components\Toggle::make('top')
-                            ->label('¿Está dentro del top?')
-                            ->inline(false),
+                        // Campo de nombre
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpanFull(), // Ocupa toda la fila
 
-                        Forms\Components\Toggle::make('active')
-                            ->label('Activo')
-                            ->inline(true),
+                        // Campo de descripción
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descripción')
+                            ->nullable()
+                            ->columnSpanFull(), // Ocupa toda la fila
+
+                        // Campo de path
+                        Forms\Components\TextInput::make('path')
+                            ->label('Path')
+                            ->helperText('Este campo se utiliza para construir la ruta (path) de la URL, escribelo en ingles. Ejemplo: gamer-chairs')
+                            ->nullable()
+                            ->columnSpanFull(), // Ocupa toda la fila
                     ])
-                        ->columnSpan(1), // Ocupa una columna
-                ])
-                    ->columns(2), // Dos columnas en total
-                Forms\Components\Grid::make(2)
-                    ->schema([
-                    // Campo de nombre (fila independiente)
-                    Forms\Components\TextInput::make('name')
-                        ->label('Nombre')
-                        ->required()
-                        ->maxLength(255)
-                    ]),
-                    // Campo de descripción (fila independiente)
-                    Forms\Components\Textarea::make('description')
-                        ->label('Descripción')
-                        ->nullable(),
+                    ->columns(1), // Una columna para esta sección
             ]);
     }
     public static function table(Table $table): Table
