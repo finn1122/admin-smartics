@@ -110,12 +110,16 @@ class ShopCategoryResource extends Resource
                     ->limit(50),
 
                 // Columna para la imagen
-                Tables\Columns\ImageColumn::make('imageUrl')
+                Tables\Columns\ImageColumn::make('image_url')
                     ->label('Imagen'),
+                // Columna para el número de productos
+                Tables\Columns\TextColumn::make('products_count')
+                    ->label('Número de Productos')
+                    ->sortable(),
 
                 // Columna para el estado "top"
                 Tables\Columns\IconColumn::make('top')
-                    ->label('¿esta dentro del top?')
+                    ->label('¿es top?')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
@@ -146,7 +150,11 @@ class ShopCategoryResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->modifyQueryUsing(function ($query) {
+                // Cargar el contador de productos
+                return $query->withCount('products');
+            });
     }
     public static function getRelations(): array
     {
