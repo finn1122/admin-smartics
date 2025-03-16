@@ -30,6 +30,7 @@ class ExternalProductDataController extends Controller
                 'supplier_id' => $supplier_id,
                 'price' => $price,
                 'sale_price' => 0, // Asignar el precio de venta como 0 cuando se crea
+                'new_sale_price' => 0, // Asignar el precio de venta como 0 cuando se crea
                 'currency_code' => $currency_code,
                 'quantity' => $quantity,
                 'consulted_at' => Carbon::now(),
@@ -39,6 +40,7 @@ class ExternalProductDataController extends Controller
             $externalProductData->update([
                 'price' => $price,
                 'sale_price' => $externalProductData->sale_price ?? 0, // Conservar el sale_price anterior si existe
+                'new_sale_price' => $externalProductData->new_sale_price ?? 0, // Conservar el sale_price anterior si existe
                 'currency_code' => $currency_code,
                 'quantity' => $quantity,
                 'consulted_at' => Carbon::now(),

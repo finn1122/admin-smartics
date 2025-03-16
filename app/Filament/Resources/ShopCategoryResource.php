@@ -54,7 +54,8 @@ class ShopCategoryResource extends Resource
 
                         Forms\Components\Toggle::make('active')
                             ->label('Activo')
-                            ->inline(false),
+                            ->inline(false)
+                            ->default(true), // Establece un valor predeterminado
                     ])
                         ->columns(2), // Dos columnas para los toggles
 
@@ -99,7 +100,7 @@ class ShopCategoryResource extends Resource
                         // Campo de path
                         Forms\Components\TextInput::make('path')
                             ->label('Path')
-                            ->helperText('Este campo se utiliza para construir la ruta (path) de la URL, escribelo en ingles. Ejemplo: gamer-chairs')
+                            ->helperText('Este campo se utiliza para construir la ruta (path) de la URL. Ejemplo: sillas-gamer')
                             ->nullable()
                             ->columnSpanFull(), // Ocupa toda la fila
                     ])
