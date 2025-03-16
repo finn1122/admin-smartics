@@ -44,6 +44,9 @@ class ProductGalleryController extends Controller
             // Intentar subir la imagen al FTP
             $filePath = $this->ftpRepository->saveGalleryImage($productId, $request->file('image'));
 
+            Log::debug($filePath);
+
+
             if (!$filePath) {
                 Log::error('Fallo al subir la imagen al FTP');
                 return response()->json(['error' => 'Error al subir la imagen al servidor'], 500);

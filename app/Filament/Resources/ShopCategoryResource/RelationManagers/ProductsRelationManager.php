@@ -1,19 +1,13 @@
 <?php
 namespace App\Filament\Resources\ShopCategoryResource\RelationManagers;
 
-use App\Filament\Resources\GalleryResource;
-use App\Filament\Resources\ProductResource;
 use App\Models\Product;
 use App\Services\DocumentUrlService;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Infolists\Components\Section;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Livewire\GalleryModal; // Importa el componente Livewire
-use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
 
 class ProductsRelationManager extends RelationManager
 {
@@ -47,6 +41,7 @@ class ProductsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('sku')
                     ->label('SKU')
                     ->sortable()
+                    ->copyable()
                     ->searchable(),
             ])
 
