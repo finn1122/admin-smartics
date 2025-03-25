@@ -12,6 +12,7 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
     const PRODUCT_GALLERY_PATH = 'product/%s/gallery';
     const BATCH_DOCUMENTS_PATH = 'batch/%s/documents';
     const SHOP_CATEGORY_PATH = 'shop/category/%s/image';
+    const SLIDER_PATH = 'slider/%s/image';
 
     public function saveFileToFtp($directory, $file):string
     {
@@ -131,5 +132,14 @@ class FtpRepositoryImpl implements FtpRepositoryInterface
 
         return $this->saveFileToFtp($directory, $file);
     }
+    public function saveSliderImage($sliderId, $file): string
+    {
+        Log::info('saveSliderImage');
+        // Directorio donde se almacenará la imagen de perfil de la panadería
+        $directory = sprintf(self::SHOP_CATEGORY_PATH, $sliderId);
+
+        return $this->saveFileToFtp($directory, $file);
+    }
+
 
 }
