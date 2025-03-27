@@ -43,6 +43,11 @@ class TagResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('products_count')
+                    ->label('Productos')
+                    ->counts('products') // Cuenta los productos relacionados
+                    ->sortable()
+                    ->alignCenter(),
                 Tables\Columns\IconColumn::make('active')
                     ->label('Activa')
                     ->boolean()
@@ -59,7 +64,7 @@ class TagResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ProductsRelationManager::class,
         ];
     }
 
