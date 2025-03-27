@@ -67,5 +67,10 @@ class Product extends Model
         return $this->belongsToMany(ShopCategory::class, 'shop_category_products', 'product_id', 'category_id')
             ->withPivot(['created_at', 'updated_at']);
     }
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'product_tags')
+            ->withTimestamps(); // Esto hace que Laravel actualice created_at y updated_at
+    }
 
 }

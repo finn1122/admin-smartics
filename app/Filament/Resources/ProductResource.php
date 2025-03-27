@@ -63,6 +63,13 @@ class ProductResource extends Resource
                     ->label('Garantía')
                     ->required(),
 
+                Forms\Components\Select::make('tags')
+                    ->label('Etiquetas')
+                    ->relationship('tags', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->default(fn ($record) => $record?->tags->pluck('id')->toArray()),
+
                 // Campo para el estado activo/inactivo
                 Forms\Components\Toggle::make('active')
                     ->label('Activa')
