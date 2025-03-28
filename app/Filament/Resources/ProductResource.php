@@ -93,6 +93,7 @@ class ProductResource extends Resource
 
             Tables\Columns\TextColumn::make('sku')
                 ->label('SKU')
+                ->copyable()
                 ->limit(16)
                 ->searchable(),
 

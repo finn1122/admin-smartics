@@ -27,6 +27,7 @@ class ProductsRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sku')
                     ->label('SKU')
+                    ->copyable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tags.name')
                     ->label('Etiquetas')

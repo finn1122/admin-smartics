@@ -73,4 +73,18 @@ class Product extends Model
             ->withTimestamps(); // Esto hace que Laravel actualice created_at y updated_at
     }
 
+    // Relación de muchos a muchos con categorías
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_product');
+    }
+
+    // Obtener la ruta completa del producto
+    public function getProductPath()
+    {
+        // Obtener la categoría más específica del producto
+        $category = $this->categories()->orderBy('parent_id', 'desc')->first(); // Tomar la categoría con el parent_id más alto
+        return $category ? $category->getFullPath() . '/' . $this->name : $this->name;
+    }
+
 }
