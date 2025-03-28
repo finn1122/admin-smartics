@@ -14,14 +14,15 @@ class ProductController extends Controller
         try {
             Log::info("createProduct");
 
+            Log::debug($request->all());
+
             // Validación de los datos del request
             $validatedData = $request->validate([
                 'name'              => 'required|string|max:255',
-                'cvaKey'           => 'nullable|string|max:100',
+                'cvaKey'            => 'nullable|string|max:100',
                 'sku'               => 'required|string|max:100|unique:products,sku',
                 'warranty'          => 'nullable|string|max:100',
-                'brandId'          => 'required|exists:brands,id',
-                'groupId'          => 'required|exists:groups,id',
+                'brandId'           => 'required|exists:brands,id',
                 'active'            => 'required|boolean',
             ]);
 
@@ -32,7 +33,6 @@ class ProductController extends Controller
                 'sku'               => $validatedData['sku'],
                 'warranty'          => $validatedData['warranty'],
                 'brand_id'          => $validatedData['brandId'], // Asignando el valor de 'brand_id'
-                'group_id'          => $validatedData['groupId'],
                 'active'            => $validatedData['active'],
             ]);
 

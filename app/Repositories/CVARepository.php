@@ -108,4 +108,44 @@ class CVARepository
             throw $e;
         }
     }
+    /**
+     * Obtiene todos los grupos
+     * @return array
+     */
+    public function getAllGroups(): array
+    {
+        Log::info('CVARepository@getAllGroups');
+        $enpointUrl = 'catalogo_clientes_xml/grupos2.xml';
+
+        Log::debug('Solicitando datos desde: ' . $this->baseUrl . $enpointUrl);
+
+        try {
+            // Hacer la solicitud HTTP con un timeout de 120 segundos
+            $XMLResponse = Http::timeout(120)->get($this->baseUrl . $enpointUrl);
+
+            // Verificar si la solicitud fue exitosa
+            if (!$XMLResponse->successful()) {
+                throw new \Exception("Error en la solicitud HTTP. Código de respuesta: " . $XMLResponse->status(), $XMLResponse->status());
+            }
+
+            // Parsear la respuesta XML
+            $response = simplexml_load_string($XMLResponse->body());
+
+            if ($response === false) {
+                throw new \Exception("Error al parsear el XML.", 500);
+            }
+
+            // Convertir el XML a un array
+            $jsonResponse = json_decode(json_encode($response), true);
+
+            return $jsonResponse;
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Timeout al realizar la solicitud HTTP: ' . $e->getMessage());
+            throw new \Exception("La solicitud HTTP tardó demasiado en completarse. Por favor, inténtalo de nuevo más tarde.", 504);
+        } catch (\Exception $e) {
+            Log::error('Error en getAllProducts: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
 }

@@ -53,6 +53,11 @@ class CvaApiResource extends Resource
                 ->group('CVA Api')
                 ->sort(1)
                 ->url(static::getUrl('index')), // Agrega la URL para el ítem "Actualizar todo"
+            'update-all-groups' => NavigationItem::make('Actualizar grupos')
+                ->icon('heroicon-o-tag')
+                ->group('CVA Api')
+                ->sort(2)
+                ->url(static::getUrl('update-all-groups')),
             'update-by-brand' => NavigationItem::make('Actualizar por marca')
                 ->icon('heroicon-o-tag')
                 ->group('CVA Api')
@@ -73,6 +78,8 @@ class CvaApiResource extends Resource
         return [
             'index' => Pages\UpdateAllProducts::route('/'),
             'update-by-brand' => Pages\UpdateProductsByBrand::route('/update-by-brand'), // Nueva página
+            'update-all-groups' => Pages\UpdateAllGroups::route('/update-all-groups'), // Nueva página
+
         ];
     }
 }

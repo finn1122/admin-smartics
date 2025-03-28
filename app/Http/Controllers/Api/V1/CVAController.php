@@ -198,4 +198,88 @@ class CVAController extends Controller
             ], 422); // Código 422 para otros errores de validación o lógica de negocio
         }
     }
+    /**
+     * Obtiene todos los productos
+     * @return JsonResponse
+     */
+    public function getAllCvaGroups(): JsonResponse
+    {
+        DB::beginTransaction(); // Iniciar transacción
+
+        try {
+            Log::info('getAllGroups');
+
+            // Obtener los grupos del repositorio
+            $groups = $this->cvaRepository->getAllGroups();
+            $supplierCVA = Supplier::where('name', 'CVA')->first();
+
+            if ($supplierCVA) {
+                foreach ($groups['grupo'] as $groupArray) {
+                    $groupName = $groupArray['grupo'];
+                    $brandName = $groupArray['marca'];
+
+                    // Verificar si el grupo existe, si no, crearlo
+                    $group = Group::where('name', $groupName)->first();
+                    if (!$group) {
+                        $group = Group::create([
+                            'name' => $groupName,
+                            'active' => true
+                        ]);
+                    }
+
+                    // Verificar si la marca existe, si no, crearla
+                    $brand = Brand::where('name', $brandName)->first();
+                    if (!$brand) {
+                        $brand = Brand::create([
+                            'name' => $brandName,
+                            'active' => true
+                        ]);
+                    }
+
+                    // Verificar si el producto existe
+                    $product = Product::where('sku', $productArray['codigo_fabricante'])->first();
+
+                    // Actualizar inventario
+                    $quantity = $productArray['disponible'];
+                    $price = $productArray['precio'];
+                    $currencyCode = CurrencyHelper::getCurrencyCode($productArray['moneda']); // Retorna "MXN"
+
+                    if (!$product) {
+                        // Crear el producto si no existe
+                        $productData = [
+                            'name' => $productArray['descripcion'],
+                            'cvaKey' => $productArray['clave'],
+                            'sku' => $productArray['codigo_fabricante'],
+                            'warranty' => $productArray['garantia'],
+                            'brandId' => $brand->id,
+                            'groupId' => $group->id,
+                            'active' => true
+                        ];
+
+                        // Despachar el job para crear el producto
+                        CreateProductJob::dispatch($productData, $supplierCVA->id);
+                    } else {
+                        $productId = $product->id;
+
+                        // Despachar el job para actualizar los datos externos del producto
+                        UpdateExternalProductDataJob::dispatch($productId, $supplierCVA->id, $currencyCode, $price, $quantity);
+                    }
+                }
+
+                DB::commit(); // Confirmar transacción
+                return response()->json(['message' => 'success'], 200);
+            }
+
+            DB::commit(); // Confirmar transacción si no hay proveedor CVA
+            return response()->json(['message' => 'success']);
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // Revertir transacción en caso de error
+            Log::error('Error en getAllProducts: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422); // Código 422 para otros errores de validación o lógica de negocio
+        }
+    }
 }
