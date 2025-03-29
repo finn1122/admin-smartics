@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Filament\Resources\CategoryResource\RelationManagers;
 use App\Models\Category;
+use App\Services\DocumentUrlService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -33,23 +34,65 @@ class CategoryResource extends Resource
 
     public static function form(Form $form): Form
     {
+        // Obtén una instancia del servicio DocumentUrlService
+        $documentUrlService = app(DocumentUrlService::class);
+
         return $form
             ->schema([
-                // Campo para el nombre de la categoría
-                Forms\Components\TextInput::make('name')
-                    ->label('Nombre')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Section::make('Configuración')
+                    ->schema([
+                        Forms\Components\Toggle::make('top')
+                            ->label('¿Está dentro del top?')
+                            ->inline(false),
 
-                // Campo para el parent_id (categoría principal)
-                Forms\Components\Select::make('parent_id')
-                    ->label('Categoría Principal')
-                    ->options(function () {
-                        return Category::all()->pluck('name', 'id')->toArray();
-                    })
-                    ->nullable()
-                    ->searchable()
-                    ->default(null),
+                        Forms\Components\Toggle::make('active')
+                            ->label('Activo')
+                            ->inline(false)
+                            ->default(true),
+                    ]),
+
+                Forms\Components\Section::make('Imagen')
+                    ->schema([
+                        Forms\Components\FileUpload::make('image_url')
+                            ->label('Imagen')
+                            ->preserveFilenames()
+                            ->acceptedFileTypes(['image/*'])
+                            ->maxSize(10240)
+                            ->required()
+                            ->downloadable()
+                            ->disk('public')
+                            ->imagePreviewHeight('250')
+                            ->dehydrated(false)
+                            ->storeFiles()
+                            ->afterStateUpdated(function ($state, $set) {})
+                            ->default(function ($record) use ($documentUrlService) {
+                                if ($record && $record->image_url) {
+                                    return $documentUrlService->getFullUrl($record->image_url);
+                                }
+                                return null;
+                            }),
+                    ]),
+
+                Forms\Components\Section::make('Información de la categoría')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\Select::make('parent_id')
+                            ->label('Categoría Principal')
+                            ->options(function () {
+                                return Category::all()->pluck('name', 'id')->toArray();
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->default(null),
+                        Forms\Components\TextInput::make('path')
+                            ->label('Ruta')
+                            ->required()
+                            ->maxLength(255),
+                    ]),
             ]);
     }
 
@@ -73,9 +116,35 @@ class CategoryResource extends Resource
                 Tables\Columns\TextColumn::make('parent.name')
                     ->label('Categoría superior')
                     ->sortable(),
+                // Columna para la imagen
+                Tables\Columns\ImageColumn::make('image_url')
+                    ->label('Imagen'),
+                // Columna para el número de productos
+                Tables\Columns\TextColumn::make('products_count')
+                    ->label('Número de Productos')
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('top')
+                    ->label('¿es top?')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
+
+                Tables\Columns\IconColumn::make('active')
+                    ->label('Activa')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
             ])
             ->filters([
-                // ...
+                /// Filtro para destacados
+                Tables\Filters\Filter::make('top')
+                    ->label('Solo destacados')
+                    ->query(fn ($query) => $query->where('top', false)),
+
+                // Filtro para activos
+                Tables\Filters\Filter::make('active')
+                    ->label('Solo activos')
+                    ->query(fn ($query) => $query->where('active', false)),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -84,7 +153,10 @@ class CategoryResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])->modifyQueryUsing(function ($query) {
+                // Cargar el contador de productos
+                return $query->withCount('products');
+            });
     }
     // Define los filtros
     public static function getGlobalSearchQuery(): Builder

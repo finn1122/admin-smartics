@@ -38,6 +38,7 @@ class ProductsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('sku')
                     ->label('SKU')
+                    ->copyable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('brand.name')
@@ -48,7 +49,6 @@ class ProductsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
                 Tables\Actions\AttachAction::make()
                     ->preloadRecordSelect()
                     ->form(fn (Tables\Actions\AttachAction $action): array => [

@@ -9,7 +9,7 @@ class Category extends Model
 {
     use NodeTrait;
 
-    protected $fillable = ['name', 'parent_id'];
+    protected $fillable = ['name', 'parent_id','path', 'image_url', 'top', 'active'];
 
     public function parent()
     {
