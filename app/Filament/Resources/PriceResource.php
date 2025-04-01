@@ -15,7 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
 
 class PriceResource extends Resource
 {
@@ -71,7 +71,27 @@ class PriceResource extends Resource
 
         return $table
             ->columns($columns)
-            ->filters([])
+            ->filters([
+                Tables\Filters\SelectFilter::make('supplier')
+                    ->label('Proveedor con cantidad > 0')
+                    ->options(Supplier::all()->pluck('name', 'id')) // Opciones de proveedores
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['value'])) {
+                            $supplierId = $data['value'];
+                            $query->whereHas('externalProductData', function (Builder $query) use ($supplierId) {
+                                $query->where('supplier_id', $supplierId)
+                                    ->where('quantity', '>', 0); // Filtra por cantidad > 0
+                            });
+                        }
+                    })
+                    ->indicateUsing(function (array $data) {
+                        if (!empty($data['value'])) {
+                            $supplier = Supplier::find($data['value']);
+                            return __('Proveedor: ') . $supplier->name . __(' (Cantidad > 0)');
+                        }
+                        return null;
+                    }),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
