@@ -3,10 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PriceResource\Pages;
-use App\Filament\Resources\PriceResource\RelationManagers;
-use App\Models\Batch;
 use App\Models\ExternalProductData;
-use App\Models\Price;
 use App\Models\Product;
 use App\Models\Supplier;
 use Filament\Forms;
@@ -16,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class PriceResource extends Resource
 {
