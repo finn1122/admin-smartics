@@ -13,11 +13,11 @@ class DeliveryArea extends Model
         'name',         // Nombre del área
         'price',       // Precio de envío
         'coordinates', // Polígono GeoJSON
-        'is_active',   // Estado activo/inactivo
+        'active',   // Estado activo/inactivo
         'description'  // Descripción adicional
     ];
     protected $casts = [
         'coordinates' => 'array', // Conversión automática JSON <> array
-        'is_active' => 'boolean'  // Conversión para el toggle
+        'active' => 'boolean'  // Conversión para el toggle
     ];
 }

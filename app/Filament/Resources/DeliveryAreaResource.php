@@ -42,7 +42,6 @@ class DeliveryAreaResource extends Resource
                     ->schema([
                         Livewire::make(MapAreaSelector::class)
                             ->label('Dibuja el área de cobertura')
-                            ->statePath('coordinates')
                             ->afterStateUpdated(function ($state, $set) {
                                 $set('coordinates', $state);
                             })

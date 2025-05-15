@@ -9,7 +9,7 @@
         x-init="initMap"
         style="width: 100%;"
     >
-        <div x-ref="map" style="height: 500px; border-radius: 0.375rem; border: 1px solid #e5e7eb;"></div>
+        <div x-ref="map" style="height: {{ $mapHeight }}; border-radius: 0.375rem; border: 1px solid #e5e7eb;"></div>
     </div>
 </div>
 
@@ -23,6 +23,9 @@
         .leaflet-top, .leaflet-bottom {
             z-index: 1 !important;
         }
+        .leaflet-draw-toolbar a {
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/images/spritesheet.png') !important;
+        }
     </style>
 @endpush
 
@@ -34,10 +37,11 @@
             return {
                 map: null,
                 drawnItems: null,
+                drawControl: null,
                 ...config,
 
                 initMap() {
-                    // Inicializar mapa
+                    // Inicializar mapa centrado en Oaxaca
                     this.map = L.map(this.$refs.map).setView(this.center, 13);
 
                     // Añadir capa base
@@ -49,8 +53,8 @@
                     this.drawnItems = new L.FeatureGroup();
                     this.map.addLayer(this.drawnItems);
 
-                    // Configurar controles de dibujo
-                    const drawControl = new L.Control.Draw({
+                    // Configurar controles de dibujo más visibles
+                    this.drawControl = new L.Control.Draw({
                         position: 'topright',
                         draw: {
                             polygon: {
@@ -60,9 +64,15 @@
                                     message: '¡El polígono no puede cruzarse a sí mismo!'
                                 },
                                 shapeOptions: {
-                                    color: '#3b82f6',
-                                    fillColor: '#93c5fd'
-                                }
+                                    color: '#3388ff',
+                                    weight: 4,
+                                    opacity: 0.8,
+                                    fillOpacity: 0.4,
+                                    fillColor: '#3388ff'
+                                },
+                                showArea: true,
+                                metric: true,
+                                guideLayers: [this.drawnItems]
                             },
                             marker: false,
                             circle: false,
@@ -71,11 +81,12 @@
                         },
                         edit: {
                             featureGroup: this.drawnItems,
+                            edit: true,
                             remove: true
                         }
                     });
 
-                    this.map.addControl(drawControl);
+                    this.map.addControl(this.drawControl);
 
                     // Manejar eventos de dibujo
                     this.map.on(L.Draw.Event.CREATED, (e) => {
@@ -85,14 +96,27 @@
                         this.coordinates = layer.toGeoJSON();
                     });
 
+                    // Eventos para edición
+                    this.map.on(L.Draw.Event.EDITED, (e) => {
+                        const layers = e.layers;
+                        layers.eachLayer((layer) => {
+                            this.coordinates = layer.toGeoJSON();
+                        });
+                    });
+
+                    this.map.on(L.Draw.Event.DELETED, () => {
+                        this.coordinates = null;
+                    });
+
                     // Dibujar polígono existente si existe
                     if (this.initialCoordinates && this.initialCoordinates.coordinates) {
                         const existingLayer = L.geoJSON(this.initialCoordinates, {
                             style: {
-                                color: '#3b82f6',
-                                weight: 2,
-                                opacity: 1,
-                                fillOpacity: 0.3
+                                color: '#3388ff',
+                                weight: 4,
+                                opacity: 0.8,
+                                fillOpacity: 0.4,
+                                fillColor: '#3388ff'
                             }
                         }).addTo(this.map);
 
