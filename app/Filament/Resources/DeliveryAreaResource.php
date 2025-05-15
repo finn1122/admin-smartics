@@ -53,7 +53,7 @@ class DeliveryAreaResource extends Resource
 
                 Forms\Components\Section::make('Configuración adicional')
                     ->schema([
-                        Forms\Components\Toggle::make('is_active')
+                        Forms\Components\Toggle::make('active')
                             ->label('Área activa')
                             ->default(true),
 
