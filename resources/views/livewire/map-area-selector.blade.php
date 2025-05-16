@@ -9,7 +9,7 @@
         x-init="initMap"
         style="width: 100%;"
     >
-        <div x-ref="map" style="height: {{ $mapHeight }}; border-radius: 0.375rem; border: 1px solid #e5e7eb;"></div>
+        <div x-ref="map" style="height: {{ $mapHeight ?? '400px' }}; border-radius: 0.375rem; border: 1px solid #e5e7eb;"></div>
     </div>
 </div>
 
@@ -18,11 +18,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <style>
         .leaflet-container {
-            z-index: 0 !important;
+            z-index: 0;
         }
+
+        .leaflet-control-container {
+            z-index: 1000;
+        }
+
         .leaflet-top, .leaflet-bottom {
-            z-index: 1 !important;
+            z-index: 1000;
         }
+
+        .leaflet-draw-toolbar {
+            z-index: 1100;
+        }
+
         .leaflet-draw-toolbar a {
             background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/images/spritesheet.png') !important;
         }
@@ -41,7 +51,7 @@
                 ...config,
 
                 initMap() {
-                    // Inicializar mapa centrado en Oaxaca
+                    // Inicializar mapa centrado
                     this.map = L.map(this.$refs.map).setView(this.center, 13);
 
                     // Añadir capa base
@@ -49,11 +59,11 @@
                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     }).addTo(this.map);
 
-                    // Configurar capa de dibujo
+                    // Crear grupo de capas para los elementos dibujados
                     this.drawnItems = new L.FeatureGroup();
                     this.map.addLayer(this.drawnItems);
 
-                    // Configurar controles de dibujo más visibles
+                    // Configurar herramienta de dibujo
                     this.drawControl = new L.Control.Draw({
                         position: 'topright',
                         draw: {
@@ -88,7 +98,7 @@
 
                     this.map.addControl(this.drawControl);
 
-                    // Manejar eventos de dibujo
+                    // Evento: nuevo polígono creado
                     this.map.on(L.Draw.Event.CREATED, (e) => {
                         const layer = e.layer;
                         this.drawnItems.clearLayers();
@@ -96,7 +106,7 @@
                         this.coordinates = layer.toGeoJSON();
                     });
 
-                    // Eventos para edición
+                    // Evento: polígono editado
                     this.map.on(L.Draw.Event.EDITED, (e) => {
                         const layers = e.layers;
                         layers.eachLayer((layer) => {
@@ -104,11 +114,12 @@
                         });
                     });
 
+                    // Evento: polígono eliminado
                     this.map.on(L.Draw.Event.DELETED, () => {
                         this.coordinates = null;
                     });
 
-                    // Dibujar polígono existente si existe
+                    // Dibujar coordenadas iniciales si existen
                     if (this.initialCoordinates && this.initialCoordinates.coordinates) {
                         const existingLayer = L.geoJSON(this.initialCoordinates, {
                             style: {
@@ -123,6 +134,11 @@
                         this.drawnItems.addLayer(existingLayer);
                         this.map.fitBounds(existingLayer.getBounds());
                     }
+
+                    // Solucionar render si el mapa está oculto inicialmente (por ejemplo dentro de un tab o modal)
+                    setTimeout(() => {
+                        this.map.invalidateSize();
+                    }, 200);
                 }
             }
         }
