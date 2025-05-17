@@ -2,8 +2,13 @@
     x-data="polygonMap({
         statePath: '{{ $getStatePath() }}',
         height: '{{ $getHeight() }}',
-        initialCoordinates: {{ json_encode($getState()) }},
-        mapId: 'map-{{ $getId() }}'
+        initialCoordinates: @js($getState()),
+        mapId: 'map-{{ $getId() }}',
+        mapCenter: {
+            lat: {{ config('delivery.default_lat', 17.0732) }},
+            lng: {{ config('delivery.default_lng', -96.7266) }},
+            zoom: {{ config('delivery.default_zoom', 13) }}
+        }
     })"
     wire:ignore
     {{ $attributes->merge($getExtraAttributes())->class([
@@ -45,6 +50,7 @@
                 statePath: config.statePath,
                 height: config.height,
                 initialCoordinates: config.initialCoordinates,
+                mapCenter: config.mapCenter,
 
                 init() {
                     this.loadLeaflet().then(() => {
@@ -91,7 +97,11 @@
                 },
 
                 initMap() {
-                    this.map = L.map(this.mapId).setView([-34.6037, -58.3816], 13);
+                    this.map = L.map(this.mapId).setView(
+                        [this.mapCenter.lat, this.mapCenter.lng],
+                        this.mapCenter.zoom
+                    );
+
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(this.map);

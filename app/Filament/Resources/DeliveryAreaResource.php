@@ -39,6 +39,7 @@ class DeliveryAreaResource extends Resource
                 Forms\Components\Toggle::make('active')
                     ->label('Activo')
                     ->required()
+                    ->default(true)
                     ->columnSpan(1),
 
                 Forms\Components\Textarea::make('description')
@@ -77,9 +78,9 @@ class DeliveryAreaResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('is_active')
+                Tables\Filters\Filter::make('active')
                     ->label('Solo áreas activas')
-                    ->query(fn ($query) => $query->where('is_active', true)),
+                    ->query(fn ($query) => $query->where('active', true)),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
