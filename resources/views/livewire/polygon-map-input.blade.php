@@ -1,63 +1,53 @@
-@once
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.2/dist/leaflet.draw.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.2/dist/leaflet.draw.js"></script>
-@endonce
 <div wire:ignore>
-    <!-- Cargar recursos de Leaflet dinámicamente -->
-    @unless($leafletLoaded)
+    @once
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.2/dist/leaflet.draw.css" />
-        <script>
-            function loadScript(src, callback) {
-                var script = document.createElement('script');
-                script.src = src;
-                script.onload = callback;
-                document.body.appendChild(script);
-            }
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet-draw@1.0.2/dist/leaflet.draw.js"></script>
+    @endonce
 
-            loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', function() {
-                loadScript('https://unpkg.com/leaflet-draw@1.0.2/dist/leaflet.draw.js', function() {
-                    window.dispatchEvent(new Event('leafletLoaded'));
-                });
-            });
-        </script>
-    @endunless
-
-    <!-- Contenedor del mapa -->
     <div
         x-data="{
             map: null,
             drawnItems: null,
+            drawControl: null,
+            isDrawing: false,
+
             initMap() {
-                // Esperar a que Leaflet esté cargado
-                const checkLeaflet = setInterval(() => {
-                    if (typeof L !== 'undefined') {
-                        clearInterval(checkLeaflet);
-                        this.setupMap();
-                    }
-                }, 100);
-            },
-            setupMap() {
-                // Configuración del mapa
+                if (typeof L === 'undefined') return;
+
+                // Inicializar mapa
                 this.map = L.map(this.$refs.map).setView([-34.6037, -58.3816], 13);
 
+                // Capa base
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(this.map);
 
+                // Grupo para formas dibujadas
                 this.drawnItems = new L.FeatureGroup();
                 this.map.addLayer(this.drawnItems);
 
-                const drawControl = new L.Control.Draw({
+                // Configurar controles de dibujo
+                this.setupDrawControl();
+
+                // Cargar polígono inicial
+                this.loadInitialPolygon();
+
+                // Eventos del mapa
+                this.setupMapEvents();
+            },
+
+            setupDrawControl() {
+                this.drawControl = new L.Control.Draw({
                     draw: {
                         polygon: {
                             allowIntersection: false,
                             showArea: true,
                             shapeOptions: {
                                 color: '#1E90FF',
-                                fillOpacity: 0.5
+                                fillOpacity: 0.5,
+                                weight: 2
                             }
                         },
                         polyline: false,
@@ -70,40 +60,92 @@
                         remove: true
                     }
                 });
-                this.map.addControl(drawControl);
+                this.map.addControl(this.drawControl);
+            },
 
-                // Cargar polígono inicial si existe
-                @if(!empty($initialCoordinates))
-                    const initialPolygon = L.geoJSON(@json($initialCoordinates), {
-                        style: {
-                            color: '#1E90FF',
-                            fillOpacity: 0.5
-                        }
-                    }).addTo(this.map);
-                    this.drawnItems.addLayer(initialPolygon);
-                    this.map.fitBounds(initialPolygon.getBounds());
+            loadInitialPolygon() {
+                @if(!empty($normalizedCoordinates))
+                    try {
+                        const initialLayer = L.geoJSON(@json($normalizedCoordinates), {
+                            style: {
+                                color: '#1E90FF',
+                                fillOpacity: 0.5,
+                                weight: 2
+                            }
+                        });
+                        this.drawnItems.addLayer(initialLayer);
+                        this.map.fitBounds(initialLayer.getBounds());
+                    } catch (e) {
+                        console.error('Error loading initial polygon:', e);
+                    }
                 @endif
+            },
 
-                // Eventos
-                this.map.on('draw:created', (e) => {
-                    this.drawnItems.clearLayers();
-                    this.drawnItems.addLayer(e.layer);
-                    @this.set('coordinates', e.layer.toGeoJSON());
+            setupMapEvents() {
+                // Evento cuando comienza el dibujo
+                this.map.on(L.Draw.Event.DRAWSTART, () => {
+                    this.isDrawing = true;
                 });
 
-                this.map.on('draw:edited', (e) => {
-                    e.layers.eachLayer((layer) => {
-                        @this.set('coordinates', layer.toGeoJSON());
-                    });
+                // Evento cuando termina el dibujo
+                this.map.on(L.Draw.Event.DRAWSTOP, () => {
+                    this.isDrawing = false;
                 });
 
-                this.map.on('draw:deleted', () => {
+                // Polígono creado
+                this.map.on(L.Draw.Event.CREATED, (e) => {
+                    this.handleDrawCreated(e);
+                });
+
+                // Polígono editado
+                this.map.on(L.Draw.Event.EDITED, (e) => {
+                    this.handleDrawEdited(e);
+                });
+
+                // Polígono eliminado
+                this.map.on(L.Draw.Event.DELETED, () => {
+                    this.handleDrawDeleted();
+                });
+            },
+
+            handleDrawCreated(e) {
+                this.drawnItems.clearLayers();
+                this.drawnItems.addLayer(e.layer);
+                this.updateCoordinates(e.layer.toGeoJSON());
+
+                // Desactivar el modo de dibujo después de crear
+                if (this.drawControl) {
+                    this.drawControl._toolbars.draw._modes.polygon.handler.disable();
+                }
+            },
+
+            handleDrawEdited(e) {
+                const layers = e.layers;
+                layers.eachLayer((layer) => {
+                    this.updateCoordinates(layer.toGeoJSON());
+                });
+            },
+
+            handleDrawDeleted() {
+                this.updateCoordinates(null);
+            },
+
+            updateCoordinates(geoJson) {
+                if (!geoJson) {
                     @this.set('coordinates', null);
-                });
+                    return;
+                }
+
+                const normalized = {
+                    type: 'Polygon',
+                    coordinates: geoJson.geometry.coordinates
+                };
+
+                @this.set('coordinates', normalized);
             }
         }"
         x-init="initMap()"
-        x-on:leafletLoaded.window="initMap()"
+        x-on:mapRefreshed.window="initMap()"
     >
         <div x-ref="map" style="height: {{ $height }}; width: 100%;"></div>
     </div>

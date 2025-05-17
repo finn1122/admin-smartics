@@ -20,4 +20,28 @@ class DeliveryArea extends Model
         'coordinates' => 'array', // Conversión automática JSON <> array
         'active' => 'boolean'  // Conversión para el toggle
     ];
+
+    // Método para asegurar formato correcto al guardar
+    public function setCoordinatesAttribute($value)
+    {
+        if (is_null($value)) {
+            $this->attributes['coordinates'] = null;
+            return;
+        }
+
+        // Asegurar que es un polígono GeoJSON válido
+        $this->attributes['coordinates'] = [
+            'type' => 'Polygon',
+            'coordinates' => $value['coordinates'] ?? $value
+        ];
+    }
+
+    public static function rules(): array
+    {
+        return [
+            'coordinates' => ['required', 'array'],
+            'coordinates.type' => ['required', 'in:Polygon'],
+            'coordinates.coordinates' => ['required', 'array'],
+        ];
+    }
 }

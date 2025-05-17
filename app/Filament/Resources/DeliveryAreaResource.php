@@ -27,7 +27,12 @@ class DeliveryAreaResource extends Resource
             ->schema([
                 PolygonMap::make('coordinates')
                     ->label('Área de entrega')
-                    ->height('600px')
+                    ->afterStateUpdated(function ($state) {
+                        // Validar coordenadas
+                        if ($state && (!isset($state['type']) || $state['type'] !== 'Polygon')) {
+                            throw new \Exception('Formato de coordenadas inválido');
+                        }
+                    })
                     ->required()
                     ->columnSpanFull(),
             ]);
