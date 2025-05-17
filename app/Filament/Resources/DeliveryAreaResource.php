@@ -17,7 +17,9 @@ class DeliveryAreaResource extends Resource
 {
     protected static ?string $model = DeliveryArea::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-flag'; // 🚩 Para áreas delimitadas
+    protected static ?string $navigationGroup = 'Shop';
+
 
     public static function form(Form $form): Form
     {
@@ -68,7 +70,7 @@ class DeliveryAreaResource extends Resource
                     ->money('MXN')
                     ->sortable(),
 
-                Tables\Columns\IconColumn::make('is_active')
+                Tables\Columns\IconColumn::make('active')
                     ->label('Activa')
                     ->boolean(),
 
