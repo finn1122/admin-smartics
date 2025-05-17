@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Forms\Components\PolygonMap;
 use App\Filament\Resources\DeliveryAreaResource\Pages;
 use App\Filament\Resources\DeliveryAreaResource\RelationManagers;
 use App\Models\DeliveryArea;
@@ -24,42 +25,11 @@ class DeliveryAreaResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información básica')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nombre del área')
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('price')
-                            ->label('Precio de envío')
-                            ->numeric()
-                            ->prefix('$')
-                            ->required(),
-                    ])->columns(2),
-
-                Forms\Components\Section::make('Delimitación geográfica')
-                    ->schema([
-                        Livewire::make(MapAreaSelector::class)
-                            ->label('Dibuja el área de cobertura')
-                            ->afterStateUpdated(function ($state, $set) {
-                                $set('coordinates', $state);
-                            })
-                            ->columnSpanFull(),
-
-                        Forms\Components\Hidden::make('coordinates')
-                    ]),
-
-                Forms\Components\Section::make('Configuración adicional')
-                    ->schema([
-                        Forms\Components\Toggle::make('active')
-                            ->label('Área activa')
-                            ->default(true),
-
-                        Forms\Components\Textarea::make('description')
-                            ->label('Descripción')
-                            ->columnSpanFull(),
-                    ]),
+                PolygonMap::make('coordinates')
+                    ->label('Área de entrega')
+                    ->height('600px')
+                    ->required()
+                    ->columnSpanFull(),
             ]);
     }
 
