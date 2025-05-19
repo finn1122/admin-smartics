@@ -73,7 +73,11 @@ return [
             'ssl' => false,
             'timeout' => 30,
         ],
-
+        'inegi_imports' => [
+            'driver' => 'local',
+            'root' => storage_path('app/inegi-imports'),
+            'throw' => false,
+        ],
     ],
 
     /*
