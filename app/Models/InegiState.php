@@ -27,3 +27,4 @@ class InegiState extends Model
         return $this->hasMany(InegiCity::class, 'c_estado', 'c_estado');
     }
 }
+

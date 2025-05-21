@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class InegiPostalData extends Model
 {
     protected $table = 'inegi_postal_data';
-    protected $primaryKey = 'id';
-    public $incrementing = false;
+    public $incrementing = true;
 
     protected $fillable = [
         'd_codigo',
@@ -18,10 +18,8 @@ class InegiPostalData extends Model
         'D_mnpio',
         'd_estado',
         'd_ciudad',
-        'd_CP',
         'c_estado',
         'c_oficina',
-        'c_CP',
         'c_tipo_asenta',
         'c_mnpio',
         'id_asenta_cpcons',
@@ -31,24 +29,24 @@ class InegiPostalData extends Model
         'longitud'
     ];
 
-    // Relaciones actualizadas
     public function state(): BelongsTo
     {
-        return $this->belongsTo(InegiState::class, 'state_id');
+        return $this->belongsTo(InegiState::class, 'c_estado', 'c_estado');
     }
 
     public function municipality(): BelongsTo
     {
-        return $this->belongsTo(InegiMunicipality::class, 'municipality_id');
+        return $this->belongsTo(InegiMunicipality::class, 'c_mnpio', 'c_mnpio')
+            ->whereColumn('inegi_municipalities.c_estado', 'inegi_postal_data.c_estado');
     }
 
     public function city(): BelongsTo
     {
-        return $this->belongsTo(InegiCity::class, 'city_id');
+        return $this->belongsTo(InegiCity::class, 'c_cve_ciudad', 'c_cve_ciudad');
     }
 
     public function settlementType(): BelongsTo
     {
-        return $this->belongsTo(InegiSettlementType::class, 'settlement_type_id');
+        return $this->belongsTo(InegiSettlementType::class, 'c_tipo_asenta', 'c_tipo_asenta');
     }
 }

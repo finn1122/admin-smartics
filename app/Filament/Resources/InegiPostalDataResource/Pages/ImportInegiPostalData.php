@@ -151,10 +151,6 @@ class ImportInegiPostalData extends Page
                             'c_oficina' => $row['c_oficina'] ?? null,
                             'latitud' => $row['latitud'] ?? null,
                             'longitud' => $row['longitud'] ?? null,
-                            'state_id' => $state->id,
-                            'municipality_id' => $municipality->id,
-                            'settlement_type_id' => $settlementType->id,
-                            'city_id' => $city?->id
                         ]
                     );
                 }
