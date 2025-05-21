@@ -18,6 +18,7 @@ class InegiPostalDataResource extends Resource
     protected static ?string $model = InegiPostalData::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Inegi'; // Grupo en el menú
     protected static ?string $modelLabel = 'Código Postal';
     protected static ?string $pluralModelLabel = 'Códigos Postales';
 

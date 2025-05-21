@@ -8,7 +8,6 @@ use App\Models\InegiMunicipality;
 use App\Models\InegiPostalData;
 use App\Models\InegiSettlementType;
 use App\Models\InegiState;
-use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -19,7 +18,8 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
 class ImportInegiPostalData extends Page
 {
     protected static string $resource = InegiPostalDataResource::class;
@@ -66,20 +66,20 @@ class ImportInegiPostalData extends Page
                     ->preserveFilenames()
                     ->maxSize(10240)
                     ->helperText('Selecciona el archivo con los códigos postales'),
+
+                // Forma correcta de añadir una acción al formulario
+                Actions::make([
+                    Action::make('import')
+                        ->label('Importar Datos')
+                        ->action('import')
+                        ->color('primary')
+                        ->icon('heroicon-o-arrow-up-tray')
+                ])
+                    ->extraAttributes(['class' => 'flex justify-end']) // Alinea a la derecha
             ])
             ->statePath('data');
     }
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Action::make('import')
-                ->label('Importar Datos')
-                ->action('import')
-                ->color('primary')
-                ->icon('heroicon-o-arrow-up-tray'),
-        ];
-    }
 
     public function import(): void
     {
