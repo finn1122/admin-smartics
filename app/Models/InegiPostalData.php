@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InegiPostalData extends Model
 {
     protected $table = 'inegi_postal_data';
-    protected $primaryKey = ['d_codigo', 'id_asenta_cpcons'];
+    protected $primaryKey = 'id';
     public $incrementing = false;
 
     protected $fillable = [
@@ -31,23 +31,24 @@ class InegiPostalData extends Model
         'longitud'
     ];
 
+    // Relaciones actualizadas
     public function state(): BelongsTo
     {
-        return $this->belongsTo(InegiState::class, 'c_estado', 'c_estado');
+        return $this->belongsTo(InegiState::class, 'state_id');
     }
 
     public function municipality(): BelongsTo
     {
-        return $this->belongsTo(InegiMunicipality::class, ['c_estado', 'c_mnpio'], ['c_estado', 'c_mnpio']);
+        return $this->belongsTo(InegiMunicipality::class, 'municipality_id');
     }
 
     public function city(): BelongsTo
     {
-        return $this->belongsTo(InegiCity::class, 'c_cve_ciudad', 'c_cve_ciudad');
+        return $this->belongsTo(InegiCity::class, 'city_id');
     }
 
     public function settlementType(): BelongsTo
     {
-        return $this->belongsTo(InegiSettlementType::class, 'c_tipo_asenta', 'c_tipo_asenta');
+        return $this->belongsTo(InegiSettlementType::class, 'settlement_type_id');
     }
 }
