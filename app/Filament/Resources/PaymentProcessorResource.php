@@ -44,6 +44,10 @@ class PaymentProcessorResource extends Resource
                             ])
                             ->required()
                             ->unique(ignoreRecord: true),
+                        Forms\Components\TextInput::make('description')
+                            ->label('Descripción')
+                            ->required()
+                            ->maxLength(255),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Configuración')

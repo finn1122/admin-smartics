@@ -14,6 +14,7 @@ class PaymentProcessor extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'type',
         'active'
     ];
