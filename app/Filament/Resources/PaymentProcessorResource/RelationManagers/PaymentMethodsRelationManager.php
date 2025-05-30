@@ -8,6 +8,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+
 class PaymentMethodsRelationManager extends RelationManager
 {
     protected static string $relationship = 'paymentMethods';
@@ -17,30 +18,20 @@ class PaymentMethodsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('code')
+                    ->label('Código')
                     ->required()
                     ->maxLength(255)
-                    ->unique(ignoreRecord: true),
-
-                Forms\Components\Select::make('method_type')
-                    ->options([
-                        'credit_card' => 'Tarjeta de crédito',
-                        'debit_card' => 'Tarjeta de débito',
-                        'bank_transfer' => 'Transferencia bancaria',
-                        'digital_wallet' => 'Billetera digital',
-                        'cash' => 'Efectivo',
-                    ])
-                    ->required(),
-
-                Forms\Components\Textarea::make('instructions')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
+                    ->unique(ignoreRecord: true)
+                    ->rules(['alpha_dash']),
 
                 Forms\Components\Toggle::make('active')
-                    ->required(),
+                    ->label('Activo')
+                    ->default(true),
             ]);
     }
 
@@ -49,24 +40,26 @@ class PaymentMethodsRelationManager extends RelationManager
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('code')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('method_type')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'credit_card' => 'Tarjeta crédito',
-                        'debit_card' => 'Tarjeta débito',
-                        'bank_transfer' => 'Transferencia',
-                        'digital_wallet' => 'Billetera',
-                        'cash' => 'Efectivo',
-                        default => $state,
-                    }),
+                    ->label('Código')
+                    ->searchable()
+                    ->badge(),
+
                 Tables\Columns\IconColumn::make('active')
+                    ->label('Activo')
                     ->boolean(),
+
+                Tables\Columns\IconColumn::make('is_fully_active')
+                    ->label('Disponible')
+                    ->boolean()
+                    ->state(fn ($record) => $record->is_fully_active),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\TernaryFilter::make('active')
+                    ->label('Solo activos'),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make(),
@@ -74,14 +67,10 @@ class PaymentMethodsRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

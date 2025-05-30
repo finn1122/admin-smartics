@@ -7,49 +7,55 @@ use App\Filament\Resources\PaymentProcessorResource\RelationManagers;
 use App\Models\PaymentProcessor;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Notifications\Notification;
 
 class PaymentProcessorResource extends Resource
 {
     protected static ?string $model = PaymentProcessor::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+    protected static ?string $modelLabel = 'Procesador de Pago';
+    protected static ?string $pluralModelLabel = 'Procesadores de Pago';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información básica')
+                Forms\Components\Section::make('Información Básica')
                     ->schema([
                         Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\Textarea::make('description')
-                            ->maxLength(500)
-                            ->columnSpanFull(),
-                    ])->columns(2),
 
-                Forms\Components\Section::make('Configuración de cuenta')
-                    ->schema([
-                        Forms\Components\TextInput::make('processor_client_id')
+                        Forms\Components\Select::make('type')
+                            ->label('Tipo')
+                            ->options([
+                                'paypal' => 'PayPal',
+                                'stripe' => 'Stripe',
+                                'mercadopago' => 'MercadoPago',
+                                'other' => 'Otro',
+                            ])
                             ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('processor_key')
-                            ->password()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('email')
-                            ->email()
-                            ->maxLength(255),
+                            ->unique(ignoreRecord: true),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Estado')
+                Forms\Components\Section::make('Configuración')
                     ->schema([
                         Forms\Components\Toggle::make('active')
-                            ->required(),
+                            ->label('Activo')
+                            ->default(false),
+
+                        Forms\Components\Placeholder::make('credentials_info')
+                            ->label('Credenciales')
+                            ->content('Las credenciales se configuran en el archivo .env')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
@@ -59,35 +65,73 @@ class PaymentProcessorResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('processor_client_id')
+                    ->label('Nombre')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'paypal' => 'info',
+                        'stripe' => 'primary',
+                        'mercadopago' => 'success',
+                        default => 'gray',
+                    }),
+
                 Tables\Columns\IconColumn::make('active')
+                    ->label('Activo')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\IconColumn::make('is_configured')
+                    ->label('Configurado')
+                    ->boolean()
+                    ->state(fn (PaymentProcessor $record): bool => $record->is_configured),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
-                Tables\Filters\SelectFilter::make('active')
+                Tables\Filters\SelectFilter::make('type')
                     ->options([
-                        '1' => 'Activos',
-                        '0' => 'Inactivos',
+                        'paypal' => 'PayPal',
+                        'stripe' => 'Stripe',
+                        'mercadopago' => 'MercadoPago',
                     ]),
+
+                Tables\Filters\TernaryFilter::make('active')
+                    ->label('Estado activo'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make()
+                    ->schema([
+                        Infolists\Components\TextEntry::make('name'),
+                        Infolists\Components\TextEntry::make('type')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'paypal' => 'info',
+                                'stripe' => 'primary',
+                                'mercadopago' => 'success',
+                                default => 'gray',
+                            }),
+                        Infolists\Components\IconEntry::make('active')
+                            ->boolean(),
+                        Infolists\Components\IconEntry::make('is_configured')
+                            ->boolean()
+                            ->label('Credenciales configuradas'),
+                    ])->columns(2),
             ]);
     }
 

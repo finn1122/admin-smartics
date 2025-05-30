@@ -34,5 +34,18 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'sandbox' => [
+            'client_id' => env('PAYPAL_SANDBOX_CLIENT_ID', env('PAYPAL_CLIENT_ID')),
+            'secret' => env('PAYPAL_SANDBOX_SECRET', env('PAYPAL_SECRET')),
+        ],
+        'live' => [
+            'client_id' => env('PAYPAL_LIVE_CLIENT_ID', env('PAYPAL_CLIENT_ID')),
+            'secret' => env('PAYPAL_LIVE_SECRET', env('PAYPAL_SECRET')),
+        ],
+    ],
 
 ];
